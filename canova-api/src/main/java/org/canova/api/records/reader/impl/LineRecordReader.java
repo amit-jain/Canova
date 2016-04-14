@@ -27,13 +27,11 @@ import org.canova.api.io.data.Text;
 import org.canova.api.records.reader.RecordReader;
 import org.canova.api.split.FileSplit;
 import org.canova.api.split.InputSplit;
+import org.canova.api.split.InputStreamInputSplit;
 import org.canova.api.split.StringSplit;
 import org.canova.api.writable.Writable;
 
-import java.io.BufferedReader;
-import java.io.DataInputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.net.URI;
 import java.util.*;
 
@@ -56,8 +54,12 @@ public class LineRecordReader implements RecordReader {
         if(split instanceof StringSplit) {
             StringSplit stringSplit = (StringSplit) split;
             iter = Arrays.asList(stringSplit.getData()).listIterator();
-        }
-        else {
+        } else if (split instanceof InputStreamInputSplit){
+            InputStream is = ((InputStreamInputSplit) split).getIs();
+            if(is != null){
+                iter =  IOUtils.lineIterator(new InputStreamReader(is));
+            }
+        } else {
             this.locations = split.locations();
             if (locations != null && locations.length > 0) {
                 iter =  IOUtils.lineIterator(new InputStreamReader(locations[0].toURL().openStream()));
@@ -103,7 +105,7 @@ public class LineRecordReader implements RecordReader {
         if ( iter != null && iter.hasNext() ) {
             return true;
         } else {
-            if ( !(inputSplit instanceof StringSplit) && currIndex < locations.length-1 ) {
+            if (locations != null && !(inputSplit instanceof StringSplit) && currIndex < locations.length-1 ) {
                 currIndex++;
                 try {
                     close();
