@@ -68,7 +68,7 @@ public class TestImageLoader {
         BufferedImage img2 = makeRandomBufferedImage(false);
 
         int w1 = 60, h1 = 110, ch1 = 6;
-        ImageLoader loader1 = new ImageLoader(w1, h1, ch1);
+        ImageLoader loader1 = new ImageLoader(h1, w1, ch1);
 
         BufferedImage scaled1 = loader1.scalingIfNeed(img1, true);
         assertEquals(w1,                            scaled1.getWidth());
@@ -95,7 +95,7 @@ public class TestImageLoader {
         assertEquals(3,                            scaled4.getSampleModel().getNumBands());
 
         int w2 = 70, h2 = 120, ch2 = 6;
-        ImageLoader loader2 = new ImageLoader(w2, h2, ch2);
+        ImageLoader loader2 = new ImageLoader(h2, w2, ch2);
 
         BufferedImage scaled5 = loader2.scalingIfNeed(img1, true);
         assertEquals(w2,                            scaled5.getWidth());
