@@ -20,12 +20,9 @@
 
 package org.canova.common;
 
-import org.canova.api.io.data.DoubleWritable;
-import org.canova.api.io.data.FloatWritable;
 import org.canova.api.writable.Writable;
-import org.nd4j.linalg.api.buffer.DataBuffer;
+import org.canova.common.data.NDArrayWritable;
 import org.nd4j.linalg.api.ndarray.INDArray;
-import org.nd4j.linalg.factory.Nd4j;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -38,20 +35,19 @@ public class RecordConverter {
     private RecordConverter() {}
 
     /**
-     * Convert an ndarray to a record
-     * @param record the array to convert
-     * @return the record
+     * Convert a record to an ndarray
+     * @param record the record to convert
+     * @return the array
      */
-    public static INDArray toArray
-    (Collection<Writable> record) {
+    public static INDArray toArray(Collection<Writable> record) {
         Iterator<Writable> writables = record.iterator();
-        INDArray linear = Nd4j.zeros(record.size());
-
-        int count = 0;
         while(writables.hasNext()) {
-            linear.putScalar(count++,Double.valueOf(writables.next().toString()));
+            Writable w = writables.next();
+            if (w instanceof NDArrayWritable) {
+                return ((NDArrayWritable)w).get();
+            }
         }
-        return linear;
+        return null;
     }
     /**
      * Convert an ndarray to a record
@@ -59,11 +55,8 @@ public class RecordConverter {
      * @return the record
      */
     public static Collection<Writable> toRecord(INDArray array) {
-        INDArray linear = array.linearView();
         Collection<Writable> writables = new ArrayList<>();
-        for(int i = 0; i < linear.length(); i++) {
-            writables.add(array.data().dataType() == DataBuffer.Type.DOUBLE ? new DoubleWritable(linear.getDouble(i)) : new FloatWritable(linear.getFloat(i)));
-        }
+        writables.add(new NDArrayWritable(array));
         return writables;
     }
 

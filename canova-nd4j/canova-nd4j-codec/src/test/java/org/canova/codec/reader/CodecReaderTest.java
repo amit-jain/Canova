@@ -26,6 +26,7 @@ import org.canova.api.conf.Configuration;
 import org.canova.api.records.reader.SequenceRecordReader;
 import org.canova.api.split.FileSplit;
 import org.canova.api.util.ClassPathResource;
+import org.canova.api.writable.ArrayWritable;
 import org.canova.api.writable.Writable;
 import org.junit.Test;
 
@@ -61,7 +62,8 @@ public class CodecReaderTest {
         System.out.println(first);
 
         //Expected size: 80x46x3
-        assertEquals(80 * 46 * 3, first.size());
+        assertEquals(1, first.size());
+        assertEquals(80 * 46 * 3, ((ArrayWritable)first.iterator().next()).length());
     }
 
 

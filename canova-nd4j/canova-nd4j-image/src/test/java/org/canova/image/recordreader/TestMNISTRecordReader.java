@@ -7,10 +7,10 @@ import java.io.FileInputStream;
 import java.io.InputStream;
 import java.util.Collection;
 
-import org.apache.commons.io.FileUtils;
 import org.canova.api.records.reader.RecordReader;
 import org.canova.api.records.writer.impl.SVMLightRecordWriter;
 import org.canova.api.split.InputStreamInputSplit;
+import org.canova.api.writable.ArrayWritable;
 import org.canova.api.writable.Writable;
 import org.canova.image.mnist.MnistFetcher;
 import org.canova.image.mnist.MnistManager;
@@ -75,8 +75,9 @@ public class TestMNISTRecordReader {
         while ( reader.hasNext() ) {
             Collection<Writable> record = reader.next();
             writer.write(record);
-            // 784 pixels converted to vector entries + a class label entry == 785
-            assertEquals( 785, record.size() );
+            // 784 pixels converted to one array entry + a class label entry == 2
+            assertEquals( 2, record.size() );
+            assertEquals( 784, ((ArrayWritable)(record.iterator().next())).length() );
         }
 
         writer.close();

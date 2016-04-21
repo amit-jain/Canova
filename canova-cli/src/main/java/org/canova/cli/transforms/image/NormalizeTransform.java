@@ -6,7 +6,9 @@ import java.util.Iterator;
 import org.canova.api.io.data.DoubleWritable;
 import org.canova.api.io.data.FloatWritable;
 import org.canova.api.writable.Writable;
+import org.canova.common.data.NDArrayWritable;
 import org.canova.cli.transforms.Transform;
+import org.nd4j.linalg.api.ndarray.INDArray;
 
 /**
  * For raw images like jpegs we need to perform transforms (normalize) 
@@ -59,7 +61,19 @@ public class NormalizeTransform implements Transform {
         while (iter.hasNext()) {
 
             Writable val =  iter.next();
-            if(val instanceof DoubleWritable) {
+            if(val instanceof NDArrayWritable) {
+                INDArray arr = ((NDArrayWritable)val).get();
+                for (int i = 0; i < arr.length(); i++) {
+                    double range = this.maxValue - this.minValue;
+                    double normalizedOut = ( arr.getDouble(i) - this.minValue ) / range;
+
+                    if (0.0 == range) {
+                        arr.putScalar(i, 0.0);
+                    } else {
+                        arr.putScalar(i, normalizedOut);
+                    }
+                }
+            } else if(val instanceof DoubleWritable) {
                 DoubleWritable dVal = (DoubleWritable) val;
                 if (!isLabelEntry) {
 
@@ -107,19 +121,23 @@ public class NormalizeTransform implements Transform {
         Iterator<Writable> iter = vector.iterator();
         double tmpVal;
         while (iter.hasNext()) {
-            tmpVal = Double.valueOf(iter.next().toString());
-            if (Double.isNaN( this.minValue)) {
-                this.minValue = tmpVal;
+            Writable val = iter.next();
+            INDArray arr = val instanceof NDArrayWritable ? ((NDArrayWritable)val).get() : null;
+            for (int i = 0; i < (arr != null ? arr.length() : 1); i++) {
+                tmpVal = arr != null ? arr.getDouble(i) : Double.valueOf(val.toString());
+                if (Double.isNaN( this.minValue)) {
+                    this.minValue = tmpVal;
 
-            } else if (tmpVal < this.minValue) {
-                this.minValue = tmpVal;
-            }
+                } else if (tmpVal < this.minValue) {
+                    this.minValue = tmpVal;
+                }
 
-            if (Double.isNaN( this.maxValue)) {
-                this.maxValue = tmpVal;
+                if (Double.isNaN( this.maxValue)) {
+                    this.maxValue = tmpVal;
 
-            } else if (tmpVal > this.maxValue) {
-                this.maxValue = tmpVal;
+                } else if (tmpVal > this.maxValue) {
+                    this.maxValue = tmpVal;
+                }
             }
 
         }

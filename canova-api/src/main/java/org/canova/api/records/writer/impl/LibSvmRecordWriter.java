@@ -22,6 +22,7 @@ package org.canova.api.records.writer.impl;
 
 import org.canova.api.conf.Configuration;
 import org.canova.api.records.reader.LibSvm;
+import org.canova.api.writable.ArrayWritable;
 import org.canova.api.writable.Writable;
 
 import java.io.File;
@@ -74,18 +75,36 @@ public class LibSvmRecordWriter extends LineRecordWriter implements LibSvm {
 
         for(int i = 0; i < asList.size() - 1; i++) {
             //sparse format
-            double val = Double.valueOf(asList.get(i).toString());
-            if(val == 0.0)
-                continue;
             try {
-                write.append((i + 1)  + ":" + Integer.valueOf(asList.get(i).toString()));
-            }
-            catch(NumberFormatException e) {
-                write.append((i + 1)  + ":" + Double.valueOf(asList.get(i).toString()));
+                double val = Double.valueOf(asList.get(i).toString());
+                if(val == 0.0)
+                    continue;
+                try {
+                    write.append((i + 1)  + ":" + Integer.valueOf(asList.get(i).toString()));
+                }
+                catch(NumberFormatException e) {
+                    write.append((i + 1)  + ":" + Double.valueOf(asList.get(i).toString()));
 
+                }
+                if(i < asList.size() - 1)
+                    write.append(" ");
+            } catch(NumberFormatException e) {
+                // This isn't a scalar, so check if we got an array already
+                Writable w = asList.get(i);
+                if (w instanceof ArrayWritable) {
+                    ArrayWritable a = (ArrayWritable)w;
+                    for (long j = 0; j < a.length(); j++) {
+                        double val = a.getDouble(j);
+                        if(val == 0.0)
+                            continue;
+                        write.append((j + 1)  + ":" + a.getDouble(j));
+                        if(j < a.length() - 1)
+                            write.append(" ");
+                    }
+                } else {
+                    throw e;
+                }
             }
-            if(i < asList.size() - 1)
-                write.append(" ");
         }
 
         out.write(write.toString().trim().getBytes());
