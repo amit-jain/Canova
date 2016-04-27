@@ -15,6 +15,7 @@ import org.nd4j.linalg.factory.Nd4j;
 import org.canova.api.io.data.DoubleWritable;
 import org.canova.api.io.data.Text;
 import org.canova.api.writable.Writable;
+import org.canova.common.data.NDArrayWritable;
 import org.canova.image.mnist.MnistManager;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.dataset.DataSet;
@@ -179,9 +180,7 @@ public class MNISTRecordReader implements RecordReader {
         //System.out.println( "size of label vector: " + labels.length() );
         
             // convert it to a List<Writable>
-            for (int i = 0; i < data.length(); i++) {
-                ret.add( new DoubleWritable( data.getDouble( i ) ) );
-            }
+            ret.add( new NDArrayWritable( data ) );
           
         // get the label    
         //    if(appendLabel)

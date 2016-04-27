@@ -9,6 +9,7 @@ import org.apache.spark.input.PortableDataStream;
 import org.canova.api.split.FileSplit;
 import org.canova.api.split.InputSplit;
 import org.canova.api.util.ClassPathResource;
+import org.canova.api.writable.ArrayWritable;
 import org.canova.api.writable.Writable;
 import org.canova.image.recordreader.ImageRecordReader;
 import org.canova.spark.BaseSparkTest;
@@ -42,7 +43,8 @@ public class TestRecordReaderFunction extends BaseSparkTest {
 
         assertEquals(4,listSpark.size());
         for( int i=0; i<4; i++ ){
-            assertEquals(28*28+1, listSpark.get(i).size());
+            assertEquals(1+1, listSpark.get(i).size());
+            assertEquals(28*28, ((ArrayWritable)listSpark.get(i).iterator().next()).length());
         }
 
         //Load normally (i.e., not via Spark), and check that we get the same results (order not withstanding)

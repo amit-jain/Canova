@@ -22,6 +22,7 @@ package org.canova.api.records.writer.impl;
 
 
 import org.canova.api.conf.Configuration;
+import org.canova.api.writable.ArrayWritable;
 import org.canova.api.writable.Writable;
 
 import java.io.*;
@@ -66,13 +67,29 @@ public class SVMLightRecordWriter extends FileRecordWriter {
             
             for (int i = 0; i < recordList.size() - 1; i++) {
 
-                value = Double.valueOf(recordList.get(i).toString());
+                try {
+                    value = Double.valueOf(recordList.get(i).toString());
 
-                if ( value > 0.0 ) {
-                	result.append(" " + (i + 1) + ":"
-                        + Double.valueOf(recordList.get(i).toString()));
+                    if ( value > 0.0 ) {
+                            result.append(" " + (i + 1) + ":"
+                            + Double.valueOf(recordList.get(i).toString()));
+                    }
+
+                } catch(NumberFormatException e) {
+                    // This isn't a scalar, so check if we got an array already
+                    Writable w = recordList.get(i);
+                    if (w instanceof ArrayWritable) {
+                        ArrayWritable a = (ArrayWritable)w;
+                        for (long j = 0; j < a.length(); j++) {
+                            value = a.getDouble(j);
+                            if ( value > 0.0 ) {
+                                result.append(" " + (j + 1) + ":" + value);
+                            }
+                        }
+                    } else {
+                        throw e;
+                    }
                 }
-                
             }
 
             out.write(result.toString().getBytes());

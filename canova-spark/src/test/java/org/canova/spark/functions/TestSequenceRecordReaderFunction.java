@@ -11,6 +11,7 @@ import org.canova.api.records.reader.impl.CSVSequenceRecordReader;
 import org.canova.api.split.FileSplit;
 import org.canova.api.split.InputSplit;
 import org.canova.api.util.ClassPathResource;
+import org.canova.api.writable.ArrayWritable;
 import org.canova.api.writable.Writable;
 import org.canova.codec.reader.CodecRecordReader;
 import org.canova.image.recordreader.ImageRecordReader;
@@ -128,7 +129,8 @@ public class TestSequenceRecordReaderFunction extends BaseSparkTest {
             Collection<Collection<Writable>> thisSequence = listSpark.get(i);
             assertEquals(25, thisSequence.size());   //Expect exactly 25 time steps (frames) in sequence
             for(Collection<Writable> c : thisSequence){
-                assertEquals(64*64*3,c.size());   //64*64 videos, RGB
+                assertEquals(1,c.size());   //64*64 videos, RGB
+                assertEquals(64*64*3,((ArrayWritable)c.iterator().next()).length());
             }
         }
 
