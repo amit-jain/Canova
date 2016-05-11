@@ -21,6 +21,9 @@
 package org.canova.api.split;
 
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.Arrays;
+import org.canova.api.io.filters.PathFilter;
 
 /**
  * Base input split
@@ -60,5 +63,37 @@ public abstract class BaseInputSplit implements InputSplit {
     @Override
     public long toLong(){
         throw new UnsupportedOperationException();
+    }
+
+    // TODO: Specialize in InputStreamInputSplit and others for CSVRecordReader, etc
+    public InputSplit[] sample(PathFilter pathFilter, double... weights) {
+        URI[] paths = pathFilter != null ? pathFilter.filter(locations()) : locations();
+
+        if (weights != null && weights.length > 0) {
+            InputSplit[] splits = new InputSplit[weights.length];
+            double totalWeight = 0;
+            for (int i = 0; i < weights.length; i++) {
+                totalWeight += weights[i];
+            }
+
+            double cumulWeight = 0;
+            int[] partitions = new int[weights.length + 1];
+            for (int i = 0; i < weights.length; i++) {
+                partitions[i] = (int)Math.round(cumulWeight * paths.length / totalWeight);
+                cumulWeight += weights[i];
+            }
+            partitions[weights.length] = paths.length;
+
+            for (int i = 0; i < weights.length; i++) {
+                ArrayList<URI> uris = new ArrayList<URI>();
+                for (int j = partitions[i]; j < partitions[i + 1]; j++) {
+                    uris.add(paths[j]);
+                }
+                splits[i] = new CollectionInputSplit(uris);
+            }
+            return splits;
+        } else {
+            return new InputSplit[] { new CollectionInputSplit(Arrays.asList(paths)) };
+        }
     }
 }
