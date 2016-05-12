@@ -45,6 +45,7 @@ public class TfidfRecordReader extends FileRecordReader  {
     private Collection<Collection<Writable>> records = new ArrayList<>();
     private Iterator<Collection<Writable>> recordIter;
     private Configuration conf;
+    private int numFeatures;
 
 
     @Override
@@ -68,6 +69,9 @@ public class TfidfRecordReader extends FileRecordReader  {
         for(int i = 0; i< ret.rows(); i++) {
             records.add(RecordConverter.toRecord(ret.getRow(i)));
         }
+
+        //cache the number of features used for each document
+        numFeatures = ret.columns();
 
         recordIter = records.iterator();
     }
@@ -112,4 +116,9 @@ public class TfidfRecordReader extends FileRecordReader  {
     public void setTfidfVectorizer(TfidfVectorizer tfidfVectorizer) {
         this.tfidfVectorizer = tfidfVectorizer;
     }
+
+    public int getNumFeatures() {
+        return numFeatures;
+    }
 }
+
