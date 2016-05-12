@@ -26,7 +26,9 @@ import org.canova.api.records.reader.impl.FileRecordReader;
 import org.canova.api.split.InputSplit;
 import org.canova.api.vector.Vectorizer;
 import org.canova.api.writable.Writable;
+import org.canova.common.RecordConverter;
 import org.canova.nd4j.nlp.vectorizer.TfidfVectorizer;
+import org.nd4j.linalg.api.ndarray.INDArray;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -55,12 +57,17 @@ public class TfidfRecordReader extends FileRecordReader  {
         super.initialize(conf,split);
         tfidfVectorizer = new TfidfVectorizer();
         tfidfVectorizer.initialize(conf);
-        tfidfVectorizer.fit(this, new Vectorizer.RecordCallBack() {
+        INDArray ret = tfidfVectorizer.fitTransform(this, new Vectorizer.RecordCallBack() {
             @Override
             public void onRecord(Collection<Writable> record) {
                 records.add(record);
             }
         });
+        records = new ArrayList<>();
+
+        for(int i = 0; i< ret.rows(); i++) {
+            records.add(RecordConverter.toRecord(ret.getRow(i)));
+        }
 
         recordIter = records.iterator();
     }

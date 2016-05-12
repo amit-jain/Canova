@@ -37,6 +37,11 @@
     <dependencies>
         <dependency>
             <groupId>org.nd4j</groupId>
+            <artifactId>canova-nd4j-common</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.nd4j</groupId>
             <artifactId>canova-data-nlp</artifactId>
             <version>${project.version}</version>
         </dependency>
