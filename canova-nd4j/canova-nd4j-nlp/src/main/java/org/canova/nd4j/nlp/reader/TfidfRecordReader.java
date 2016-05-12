@@ -97,4 +97,12 @@ public class TfidfRecordReader extends FileRecordReader  {
     public Configuration getConf() {
         return conf;
     }
+
+    public TfidfVectorizer getTfidfVectorizer() {
+        return tfidfVectorizer;
+    }
+
+    public void setTfidfVectorizer(TfidfVectorizer tfidfVectorizer) {
+        this.tfidfVectorizer = tfidfVectorizer;
+    }
 }
