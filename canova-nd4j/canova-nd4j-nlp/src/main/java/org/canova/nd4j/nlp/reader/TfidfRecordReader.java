@@ -56,24 +56,41 @@ public class TfidfRecordReader extends FileRecordReader  {
     @Override
     public void initialize(Configuration conf, InputSplit split) throws IOException, InterruptedException {
         super.initialize(conf,split);
-        tfidfVectorizer = new TfidfVectorizer();
-        tfidfVectorizer.initialize(conf);
-        INDArray ret = tfidfVectorizer.fitTransform(this, new Vectorizer.RecordCallBack() {
-            @Override
-            public void onRecord(Collection<Writable> record) {
-                records.add(record);
-            }
-        });
-        records = new ArrayList<>();
+        //train  a new one since it hasn't been specified
+        if(tfidfVectorizer == null) {
+            tfidfVectorizer = new TfidfVectorizer();
+            tfidfVectorizer.initialize(conf);
+            INDArray ret = tfidfVectorizer.fitTransform(this, new Vectorizer.RecordCallBack() {
+                @Override
+                public void onRecord(Collection<Writable> record) {
+                    records.add(record);
+                }
+            });
 
-        for(int i = 0; i< ret.rows(); i++) {
-            records.add(RecordConverter.toRecord(ret.getRow(i)));
+
+            for(int i = 0; i< ret.rows(); i++) {
+                records.add(RecordConverter.toRecord(ret.getRow(i)));
+            }
+
+            //cache the number of features used for each document
+            numFeatures = ret.columns();
+            records = new ArrayList<>();
+            recordIter = records.iterator();
+        }
+        else {
+            records = new ArrayList<>();
+
+            //the record reader has 2 phases, we are skipping the
+            //document frequency phase and just using the super() to get the file contents
+            //and pass it to the already existing vectorizer.
+            while(hasNext()) {
+                Collection<Writable> fileContents = next();
+                records.add(RecordConverter.toRecord(tfidfVectorizer.transform(fileContents)));
+            }
+            recordIter = records.iterator();
         }
 
-        //cache the number of features used for each document
-        numFeatures = ret.columns();
 
-        recordIter = records.iterator();
     }
 
     @Override
