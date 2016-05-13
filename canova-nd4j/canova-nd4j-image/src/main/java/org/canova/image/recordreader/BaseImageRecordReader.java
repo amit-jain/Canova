@@ -30,12 +30,11 @@ import org.canova.api.split.InputSplit;
 import org.canova.api.split.InputStreamInputSplit;
 import org.canova.api.writable.Writable;
 import org.canova.common.RecordConverter;
+import org.canova.image.loader.BaseImageLoader;
 import org.canova.image.loader.ImageLoader;
+import org.canova.image.loader.NativeImageLoader;
 import org.nd4j.linalg.api.ndarray.INDArray;
 
-import javax.imageio.ImageIO;
-import javax.imageio.spi.IIORegistry;
-import java.awt.image.BufferedImage;
 import java.io.DataInputStream;
 import java.io.File;
 import java.io.IOException;
@@ -57,9 +56,10 @@ public abstract class BaseImageRecordReader implements RecordReader {
     public List<String> labels  = new ArrayList<>();
     protected boolean appendLabel = false;
     protected Collection<Writable> record;
-    protected final List<String> allowedFormats = Arrays.asList("tif", "jpg", "png", "jpeg", "bmp", "JPEG", "JPG", "TIF", "PNG");
     protected boolean hitImage = false;
-    protected ImageLoader imageLoader;
+    protected int height = 28, width = 28, channels = 1;
+    protected boolean cropImage = false;
+    protected BaseImageLoader imageLoader;
     protected InputSplit inputSplit;
     protected Map<String,String> fileNameMap = new LinkedHashMap<>();
     protected String pattern; // Pattern to split and segment file name, pass in regex
@@ -68,17 +68,8 @@ public abstract class BaseImageRecordReader implements RecordReader {
     public final static String HEIGHT = NAME_SPACE + ".height";
     public final static String WIDTH = NAME_SPACE + ".width";
     public final static String CHANNELS = NAME_SPACE + ".channels";
-
-
-    static {
-        ImageIO.scanForPlugins();
-        IIORegistry.getDefaultInstance().registerServiceProvider(new com.twelvemonkeys.imageio.plugins.jpeg.JPEGImageReaderSpi());
-        IIORegistry.getDefaultInstance().registerServiceProvider(new com.twelvemonkeys.imageio.plugins.jpeg.JPEGImageWriterSpi());
-        IIORegistry.getDefaultInstance().registerServiceProvider(new com.twelvemonkeys.imageio.plugins.psd.PSDImageReaderSpi());
-        IIORegistry.getDefaultInstance().registerServiceProvider(Arrays.asList(new com.twelvemonkeys.imageio.plugins.bmp.BMPImageReaderSpi(),
-                new com.twelvemonkeys.imageio.plugins.bmp.CURImageReaderSpi(),
-                new com.twelvemonkeys.imageio.plugins.bmp.ICOImageReaderSpi()));
-    }
+    public final static String CROP_IMAGE = NAME_SPACE + ".cropimage";
+    public final static String IMAGE_LOADER = NAME_SPACE + ".imageloader";
 
     public BaseImageRecordReader() {
     }
@@ -90,7 +81,9 @@ public abstract class BaseImageRecordReader implements RecordReader {
 
     public BaseImageRecordReader(int height, int width, int channels, boolean appendLabel) {
         this.appendLabel = appendLabel;
-        imageLoader = new ImageLoader(height, width, channels);
+        this.height = height;
+        this.width = width;
+        this.channels = channels;
     }
 
 
@@ -112,7 +105,7 @@ public abstract class BaseImageRecordReader implements RecordReader {
     }
 
     protected boolean containsFormat(String format) {
-        for(String format2 : allowedFormats)
+        for(String format2 : imageLoader.getAllowedFormats())
             if(format.endsWith("." + format2))
                 return true;
         return false;
@@ -121,6 +114,9 @@ public abstract class BaseImageRecordReader implements RecordReader {
 
     @Override
     public void initialize(InputSplit split) throws IOException{
+        if (imageLoader == null) {
+            imageLoader = new NativeImageLoader(height, width, channels, cropImage);
+        }
             inputSplit = split;
             if(split instanceof FileSplit) {
                 URI[] locations = split.locations();
@@ -192,7 +188,15 @@ public abstract class BaseImageRecordReader implements RecordReader {
     public void initialize(Configuration conf, InputSplit split) throws IOException, InterruptedException {
         this.appendLabel = conf.getBoolean(APPEND_LABEL,false);
         this.labels = new ArrayList<>(conf.getStringCollection(LABELS));
-        imageLoader = new ImageLoader(conf.getInt(HEIGHT,28), conf.getInt(WIDTH,28),conf.getInt(CHANNELS,1));
+        this.height = conf.getInt(HEIGHT,height);
+        this.width = conf.getInt(WIDTH,width);
+        this.channels = conf.getInt(CHANNELS,channels);
+        this.cropImage = conf.getBoolean(CROP_IMAGE,cropImage);
+        if ("imageio".equals(conf.get(IMAGE_LOADER))) {
+            this.imageLoader = new ImageLoader(height, width, channels, cropImage);
+        } else {
+            this.imageLoader = new NativeImageLoader(height, width, channels, cropImage);
+        }
         this.conf = conf;
         initialize(split);
     }
@@ -208,8 +212,7 @@ public abstract class BaseImageRecordReader implements RecordReader {
             if(image.isDirectory())
                 return next();
             try {
-                BufferedImage bimg = ImageIO.read(image);
-                INDArray row = imageLoader.asRowVector(bimg);
+                INDArray row = imageLoader.asRowVector(image);
                 ret = RecordConverter.toRecord(row);
                 if(appendLabel)
                     ret.add(new DoubleWritable(labels.indexOf(image.getParentFile().getName())));
@@ -298,8 +301,7 @@ public abstract class BaseImageRecordReader implements RecordReader {
 
     @Override
     public Collection<Writable> record(URI uri, DataInputStream dataInputStream ) throws IOException {
-        BufferedImage bimg = ImageIO.read(dataInputStream);
-        INDArray row = imageLoader.asRowVector(bimg);
+        INDArray row = imageLoader.asRowVector(dataInputStream);
         Collection<Writable> ret = RecordConverter.toRecord(row);
         if(appendLabel) ret.add(new DoubleWritable(labels.indexOf(getLabel(uri.getPath()))));
         return ret;

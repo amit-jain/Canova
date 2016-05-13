@@ -11,12 +11,11 @@ import org.canova.api.writable.Writable;
 import org.canova.common.RecordConverter;
 import org.canova.image.loader.BaseImageLoader;
 import org.canova.image.loader.ImageLoader;
+import org.canova.image.loader.NativeImageLoader;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.imageio.ImageIO;
-import java.awt.image.BufferedImage;
 import java.io.*;
 import java.net.URI;
 import java.util.*;
@@ -57,7 +56,10 @@ public class ImageNetRecordReader extends BaseImageRecordReader {
     }
 
     public ImageNetRecordReader(int height, int width, int channels,  String labelPath, String fileNameMapPath, boolean appendLabel, String pattern, int patternPosition) {
-        imageLoader = new ImageLoader(height, width, channels);
+        this.height = height;
+        this.width = width;
+        this.channels = channels;
+        this.cropImage = true;
         this.labelPath = labelPath;
         this.appendLabel = appendLabel;
         this.fileNameMapPath = fileNameMapPath;
@@ -93,6 +95,9 @@ public class ImageNetRecordReader extends BaseImageRecordReader {
 
     @Override
     public void initialize(InputSplit split) throws IOException {
+        if (imageLoader == null) {
+            imageLoader = new NativeImageLoader(height, width, channels, cropImage);
+        }
         inputSplit = split;
         imgNetLabelSetup();
 
@@ -133,7 +138,7 @@ public class ImageNetRecordReader extends BaseImageRecordReader {
                 return next();
 
             try {
-                return load(ImageIO.read(image), image.getName());
+                return load(imageLoader.asRowVector(image), image.getName());
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -160,11 +165,9 @@ public class ImageNetRecordReader extends BaseImageRecordReader {
         throw new IllegalStateException("No more elements");
     }
 
-    private Collection<Writable> load(BufferedImage image, String filename){
+    private Collection<Writable> load(INDArray image, String filename) throws IOException {
         int labelId = -1;
-        BufferedImage bimg = imageLoader.centerCropIfNeeded(image);
-        INDArray row = imageLoader.asRowVector(bimg);
-        Collection<Writable> ret = RecordConverter.toRecord(row);
+        Collection<Writable> ret = RecordConverter.toRecord(image);
         if(appendLabel && fileNameMapPath == null) {
             String WNID = FilenameUtils.getBaseName(filename).split(pattern)[patternPosition];
             labelId = labels.indexOf(labelFileIdMap.get(WNID));
@@ -181,8 +184,7 @@ public class ImageNetRecordReader extends BaseImageRecordReader {
 
     @Override
     public Collection<Writable> record(URI uri, DataInputStream dataInputStream ) throws IOException {
-        BufferedImage bimg = ImageIO.read(dataInputStream);
         imgNetLabelSetup();
-        return load(bimg,FilenameUtils.getName(uri.getPath()));
+        return load(imageLoader.asRowVector(dataInputStream), FilenameUtils.getName(uri.getPath()));
     }
 }
