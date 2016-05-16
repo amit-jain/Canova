@@ -24,9 +24,11 @@ package org.canova.image.loader;
 import org.canova.api.records.reader.RecordReader;
 import org.canova.api.split.LimitFileSplit;
 import org.canova.image.recordreader.ImageRecordReader;
+import org.nd4j.linalg.api.ndarray.INDArray;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.Serializable;
 import java.util.*;
 
@@ -101,6 +103,25 @@ public class LFWLoader extends BaseImageLoader implements Serializable {
 
     public LFWLoader(){this(false);}
 
+    @Override
+    public INDArray asRowVector(File f) throws IOException {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public INDArray asRowVector(InputStream inputStream) throws IOException {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public INDArray asMatrix(File f) throws IOException {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public INDArray asMatrix(InputStream inputStream) throws IOException {
+        throw new UnsupportedOperationException();
+    }
 
     public void generateLfwMaps() {
         if(useSubset) {

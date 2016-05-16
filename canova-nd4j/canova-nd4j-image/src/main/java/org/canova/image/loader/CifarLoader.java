@@ -3,6 +3,7 @@ package org.canova.image.loader;
 import com.google.common.annotations.VisibleForTesting;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
+import org.nd4j.linalg.api.ndarray.INDArray;
 
 import java.io.*;
 import java.util.*;
@@ -57,6 +58,26 @@ public class CifarLoader extends BaseImageLoader implements Serializable {
 
     public CifarLoader(){
         load();
+    }
+
+    @Override
+    public INDArray asRowVector(File f) throws IOException {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public INDArray asRowVector(InputStream inputStream) throws IOException {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public INDArray asMatrix(File f) throws IOException {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public INDArray asMatrix(InputStream inputStream) throws IOException {
+        throw new UnsupportedOperationException();
     }
 
     public void generateMaps() {

@@ -30,7 +30,9 @@ import org.canova.api.split.InputSplit;
 import org.canova.api.split.InputStreamInputSplit;
 import org.canova.api.writable.Writable;
 import org.canova.common.RecordConverter;
+import org.canova.image.loader.BaseImageLoader;
 import org.canova.image.loader.ImageLoader;
+import org.canova.image.loader.NativeImageLoader;
 import org.nd4j.linalg.api.ndarray.INDArray;
 
 import java.io.DataInputStream;
@@ -53,7 +55,8 @@ import java.util.*;
  */
 public class VideoRecordReader implements SequenceRecordReader {
     private Iterator<File> iter;
-    private ImageLoader imageLoader;
+    private int height = 28, width = 28;
+    private BaseImageLoader imageLoader;
     private List<String> labels  = new ArrayList<>();
     private boolean appendLabel = false;
     private Collection<Writable> record;
@@ -62,6 +65,7 @@ public class VideoRecordReader implements SequenceRecordReader {
     private Configuration conf;
     public final static String HEIGHT = NAME_SPACE + ".video.height";
     public final static String WIDTH = NAME_SPACE + ".video.width";
+    public final static String IMAGE_LOADER = NAME_SPACE + ".imageloader";
     protected InputSplit inputSplit;
 
     public VideoRecordReader() {
@@ -80,7 +84,8 @@ public class VideoRecordReader implements SequenceRecordReader {
 
     public VideoRecordReader( int height, int width, boolean appendLabel,List<String> labels) {
         this.appendLabel = appendLabel;
-        imageLoader = new ImageLoader(height, width);
+        this.height = height;
+        this.width = width;
         this.labels = labels;
 
     }
@@ -92,19 +97,22 @@ public class VideoRecordReader implements SequenceRecordReader {
      */
     public VideoRecordReader( int height, int width) {
         this(height, width, false);
-        imageLoader = new ImageLoader(height, width);
 
 
     }
 
     public VideoRecordReader( int height, int width, boolean appendLabel) {
         this.appendLabel = appendLabel;
-        imageLoader = new ImageLoader(height, width);
+        this.height = height;
+        this.width = width;
 
     }
 
     @Override
     public void initialize(InputSplit split) throws IOException, InterruptedException {
+        if (imageLoader == null) {
+            imageLoader = new NativeImageLoader(height, width);
+        }
         if(split instanceof FileSplit) {
             URI[] locations = split.locations();
             if(locations != null && locations.length >= 1) {
@@ -180,7 +188,13 @@ public class VideoRecordReader implements SequenceRecordReader {
     public void initialize(Configuration conf, InputSplit split) throws IOException, InterruptedException {
         this.conf = conf;
         this.appendLabel = conf.getBoolean(APPEND_LABEL,false);
-        this.imageLoader = new ImageLoader(conf.getInt(HEIGHT,28), conf.getInt(WIDTH,28));
+        this.height = conf.getInt(HEIGHT,height);
+        this.width = conf.getInt(WIDTH,width);
+        if ("imageio".equals(conf.get(IMAGE_LOADER))) {
+            this.imageLoader = new ImageLoader(height, width);
+        } else {
+            this.imageLoader = new NativeImageLoader(height, width);
+        }
 
         initialize(split);
     }

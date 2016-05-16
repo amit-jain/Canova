@@ -38,6 +38,7 @@ import java.awt.image.WritableRaster;
 import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.util.Arrays;
 
 /**
  * Image loader for taking images
@@ -45,16 +46,19 @@ import java.nio.ByteOrder;
  * @author Adam Gibson
  *
  */
-public class ImageLoader implements Serializable {
-
-    private int height = -1;
-    private int width = -1;
-    private int channels = -1;
+public class ImageLoader extends BaseImageLoader {
 
     static {
+        ImageIO.scanForPlugins();
         IIORegistry registry = IIORegistry.getDefaultInstance();
         registry.registerServiceProvider(new TIFFImageWriterSpi());
         registry.registerServiceProvider(new TIFFImageReaderSpi());
+        registry.registerServiceProvider(new com.twelvemonkeys.imageio.plugins.jpeg.JPEGImageReaderSpi());
+        registry.registerServiceProvider(new com.twelvemonkeys.imageio.plugins.jpeg.JPEGImageWriterSpi());
+        registry.registerServiceProvider(new com.twelvemonkeys.imageio.plugins.psd.PSDImageReaderSpi());
+        registry.registerServiceProvider(Arrays.asList(new com.twelvemonkeys.imageio.plugins.bmp.BMPImageReaderSpi(),
+                new com.twelvemonkeys.imageio.plugins.bmp.CURImageReaderSpi(),
+                new com.twelvemonkeys.imageio.plugins.bmp.ICOImageReaderSpi()));
     }
 
     public ImageLoader() {
@@ -89,22 +93,29 @@ public class ImageLoader implements Serializable {
         this.channels = channels;
     }
 
+    public ImageLoader(int height, int width, int channels, boolean centerCropIfNeeded) {
+        this(height, width, channels);
+        this.centerCropIfNeeded = centerCropIfNeeded;
+    }
+
     /**
      * Convert a file to a row vector
      *
      * @param f the image to convert
      * @return the flattened image
-     * @throws Exception
+     * @throws IOException
      */
-    public INDArray asRowVector(File f) throws Exception {
-        if(channels == 3) {
-            return toRaveledTensor(f);
-        }
-        return NDArrayUtil.toNDArray(flattenedImageFromFile(f));
+    public INDArray asRowVector(File f) throws IOException {
+        return asRowVector(ImageIO.read(f));
+//        if(channels == 3) {
+//            return toRaveledTensor(f);
+//        }
+//        return NDArrayUtil.toNDArray(flattenedImageFromFile(f));
     }
 
-    public INDArray asRowVector(InputStream inputStream) {
-        return asMatrix(inputStream).ravel();
+    public INDArray asRowVector(InputStream inputStream) throws IOException {
+        return asRowVector(ImageIO.read(inputStream));
+//        return asMatrix(inputStream).ravel();
     }
 
     /**
@@ -114,6 +125,9 @@ public class ImageLoader implements Serializable {
      * representation of the image
      */
     public INDArray asRowVector(BufferedImage image) {
+        if (centerCropIfNeeded) {
+            image = centerCropIfNeeded(image);
+        }
         image = scalingIfNeed(image, true);
         if(channels == 3) {
             return toINDArrayBGR(image).ravel();
@@ -224,14 +238,14 @@ public class ImageLoader implements Serializable {
      * @param inputStream the input stream to convert
      * @return the input stream to convert
      */
-    public INDArray asMatrix(InputStream inputStream) {
+    public INDArray asMatrix(InputStream inputStream) throws IOException {
        if(channels == 3)
            return toBgr(inputStream);
         try {
             BufferedImage image  = ImageIO.read(inputStream);
             return asMatrix(image);
         } catch (IOException e) {
-            throw new RuntimeException("Unable to load image",e);
+            throw new IOException("Unable to load image",e);
         }
     }
 
@@ -275,7 +289,7 @@ public class ImageLoader implements Serializable {
         }
     }
 
-    public int[] flattenedImageFromFile(File f) throws Exception {
+    public int[] flattenedImageFromFile(File f) throws IOException {
         return ArrayUtil.flatten(fromFile(f));
     }
 
