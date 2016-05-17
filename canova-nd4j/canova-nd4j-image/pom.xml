@@ -34,13 +34,13 @@
         <dependency>
             <groupId>org.nd4j</groupId>
             <artifactId>nd4j-native</artifactId>
-            <version>0.4-rc3.9</version>
+            <version>${nd4j.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.nd4j</groupId>
             <artifactId>nd4j-buffer</artifactId>
-            <version>0.4-rc3.9</version>
+            <version>${nd4j.version}</version>
         </dependency>
         <dependency>
             <groupId>org.nd4j</groupId>
