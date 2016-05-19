@@ -66,15 +66,14 @@ public class TfidfRecordReader extends FileRecordReader  {
                     records.add(record);
                 }
             });
-
-
+            //clear out old strings
+            records.clear();
             for(int i = 0; i< ret.rows(); i++) {
                 records.add(RecordConverter.toRecord(ret.getRow(i)));
             }
 
             //cache the number of features used for each document
             numFeatures = ret.columns();
-            records = new ArrayList<>();
             recordIter = records.iterator();
         }
         else {
