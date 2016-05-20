@@ -7,11 +7,10 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>canova-spark</artifactId>
+    <artifactId>canova-spark_${scala.binary.version}</artifactId>
 
     <properties>
         <spark.version>1.5.1</spark.version>
-        <scala.binary.version>2.10</scala.binary.version>
     </properties>
 
     <dependencies>
