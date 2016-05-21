@@ -23,6 +23,7 @@ package org.canova.api.records.reader.impl;
 
 import org.canova.api.conf.Configuration;
 import org.canova.api.records.reader.RecordReader;
+import org.canova.api.records.reader.SequenceRecordReader;
 import org.canova.api.split.InputSplit;
 import org.canova.api.writable.Writable;
 
@@ -32,19 +33,23 @@ import java.net.URI;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 /**
- * Collection record reader.
+ * Collection record reader for sequences.
  * Mainly used for testing.
  *
- * @author Adam Gibson
+ * @author Alex Black
  */
-public class CollectionRecordReader implements RecordReader {
-    private Iterator<? extends Collection<Writable>> records;
-    private final Collection<? extends Collection<Writable>> original;
+public class CollectionSequenceRecordReader implements SequenceRecordReader {
+    private Iterator<? extends Collection<? extends Collection<Writable>>> records;
+    private final Collection<? extends Collection<? extends Collection<Writable>>> original;
 
-    public CollectionRecordReader(Collection<? extends Collection<Writable>> records) {
+    /**
+     *
+     * @param records    Collection of sequences. For example, List<List<List<Writable>>> where the inner  two lists
+     *                   are a sequence, and the outer list/collection is a list of sequences
+     */
+    public CollectionSequenceRecordReader(Collection<? extends Collection<? extends Collection<Writable>>> records) {
         this.records = records.iterator();
         this.original = records;
     }
@@ -61,7 +66,7 @@ public class CollectionRecordReader implements RecordReader {
 
     @Override
     public Collection<Writable> next() {
-        return records.next();
+        throw new UnsupportedOperationException("next() not supported for CollectionSequencRecordReader; use sequenceRecord()");
     }
 
     @Override
@@ -96,8 +101,18 @@ public class CollectionRecordReader implements RecordReader {
 
     @Override
     public Collection<Writable> record(URI uri, DataInputStream dataInputStream) throws IOException {
-        throw new UnsupportedOperationException("Generating records from DataInputStream not supported for CollectionRecordReader");
+        throw new UnsupportedOperationException("Generating records from DataInputStream not supported for SequenceCollectionRecordReader");
     }
 
 
+    @Override
+    @SuppressWarnings("unchecked")
+    public Collection<Collection<Writable>> sequenceRecord() {
+        return (Collection<Collection<Writable>>) records.next();
+    }
+
+    @Override
+    public Collection<Collection<Writable>> sequenceRecord(URI uri, DataInputStream dataInputStream) throws IOException {
+        throw new UnsupportedOperationException("Generating records from DataInputStream not supported for SequenceCollectionRecordReader");
+    }
 }
