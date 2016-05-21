@@ -20,15 +20,6 @@
 
 package org.canova.cli.subcommands;
 
-import static org.junit.Assert.*;
-
-import java.io.File;
-import java.io.IOException;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-
 import org.apache.commons.io.FileUtils;
 import org.canova.api.conf.Configuration;
 import org.canova.api.formats.input.InputFormat;
@@ -41,6 +32,15 @@ import org.canova.image.loader.LFWLoader;
 import org.canova.image.recordreader.MNISTRecordReader;
 import org.junit.Test;
 
+import java.io.File;
+import java.io.IOException;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
+import static org.junit.Assert.assertEquals;
+
 public class TestVectorize {
 
     private static final String trainingFilesFilename = "images-idx1-ubyte.gz";
@@ -52,7 +52,7 @@ public class TestVectorize {
     public static final String trainingFileLabelsFilename_unzipped = "labels-idx1-ubyte";
 
 
-    static String TEMP_ROOT = "/tmp"; //System.getProperty("user.home");
+    static String TEMP_ROOT = System.getProperty("user.home");
     static String MNIST_ROOT = TEMP_ROOT + File.separator + "MNIST" + File.separator;
 
     static String MNIST_Filename = MNIST_ROOT + MNISTRecordReader.trainingFilesFilename_unzipped;
