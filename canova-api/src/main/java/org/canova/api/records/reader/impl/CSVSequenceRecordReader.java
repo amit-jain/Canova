@@ -17,6 +17,7 @@ import java.util.Iterator;
  * This reader is indended to read sequences of data in CSV format, where
  * each sequence is defined in its own file (and there are multiple files)
  * Each line in the file represents one time step
+ * @author Alex Black
  */
 public class CSVSequenceRecordReader extends FileRecordReader implements SequenceRecordReader {
     private int skipNumLines = 0;
