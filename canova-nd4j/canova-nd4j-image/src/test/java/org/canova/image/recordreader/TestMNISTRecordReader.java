@@ -13,7 +13,6 @@ import org.canova.api.split.InputStreamInputSplit;
 import org.canova.api.writable.ArrayWritable;
 import org.canova.api.writable.Writable;
 import org.canova.image.mnist.MnistFetcher;
-import org.canova.image.mnist.MnistManager;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,7 +30,7 @@ public class TestMNISTRecordReader {
         String TEMP_ROOT = System.getProperty("user.home");
         String MNIST_ROOT = TEMP_ROOT + File.separator + "MNIST" + File.separator;
 
-        String MNIST_Filename = MNIST_ROOT + MNISTRecordReader.trainingFilesFilename_unzipped;
+        String MNIST_Filename = MNIST_ROOT + MNISTRecordReader.TRAINING_FILES_FILENAME_UNZIPPED;
 
         // 1. check for the MNIST data first!
 

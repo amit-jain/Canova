@@ -1,11 +1,8 @@
 package org.canova.image.recordreader;
 
-import org.canova.api.split.FileSplit;
 import org.canova.api.split.InputSplit;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.io.LineIterator;
 import org.canova.api.conf.Configuration;
 
 import org.canova.api.records.reader.RecordReader;
@@ -13,7 +10,6 @@ import org.canova.api.records.reader.RecordReader;
 import org.nd4j.linalg.factory.Nd4j;
 
 import org.canova.api.io.data.DoubleWritable;
-import org.canova.api.io.data.Text;
 import org.canova.api.writable.Writable;
 import org.canova.common.data.NDArrayWritable;
 import org.canova.image.mnist.MnistManager;
@@ -65,42 +61,40 @@ public class MNISTRecordReader implements RecordReader {
 
 	private URI[] locations;
     private int currIndex = 0;
-    private Iterator<String> iter;	
-    
+    private Iterator<String> iter;
+
     private transient MnistManager man;
 
-    // is this only valid for the training data?
-    public final static int NUM_EXAMPLES = 60000;
     private int numOutcomes = 0;
     private int totalExamples = 0;
     private int cursor = 0;
-    private int inputColumns = 0;
-    
-    protected DataSet curr = null;
-    
-    private File fileDir;
-
-    private static final String trainingFilesURL = "http://yann.lecun.com/exdb/mnist/train-images-idx3-ubyte.gz";
-
-	private static final String trainingFilesFilename = "images-idx1-ubyte.gz";
-	public static final String trainingFilesFilename_unzipped = "images-idx1-ubyte";
-
-	private static final String trainingFileLabelsURL = "http://yann.lecun.com/exdb/mnist/train-labels-idx1-ubyte.gz";
-	private static final String trainingFileLabelsFilename = "labels-idx1-ubyte.gz";
-	public static final String trainingFileLabelsFilename_unzipped = "labels-idx1-ubyte";
-	private static final String LOCAL_DIR_NAME = "MNIST";    
-    
-    // this is only valid when we're running in local mode
-    private static final String TEMP_ROOT = System.getProperty("user.home");
-    private static final String MNIST_ROOT = TEMP_ROOT + File.separator + "MNIST" + File.separator;
-    
     // for now we always want to binarize
     private boolean binarize = true;
+
+    private int inputColumns = 0;
+
+    protected DataSet curr;
     protected InputSplit inputSplit;
+
+    public static final String TRAINING_FILES_URL = "http://yann.lecun.com/exdb/mnist/train-images-idx3-ubyte.gz";
+
+    public static final String TRAINING_FILES_FILENAME = "images-idx1-ubyte.gz";
+    public static final String TRAINING_FILES_FILENAME_UNZIPPED = "images-idx1-ubyte";
+    public static final String TRAINING_FILE_LABELS_URL = "http://yann.lecun.com/exdb/mnist/train-labels-idx1-ubyte.gz";
+    public static final String TRAINING_FILE_LABELS_FILENAME = "labels-idx1-ubyte.gz";
+    public static final String TRAINING_FILE_LABELS_FILENAME_UNZIPPED = "labels-idx1-ubyte";
+
+	public static final String LOCAL_DIR_NAME = "MNIST";
+    // this is only valid when we're running in local mode
+    public static final String TEMP_ROOT = System.getProperty("user.home");
+    public static final String MNIST_ROOT = TEMP_ROOT + File.separator + "MNIST" + File.separator;
+
+    // is this only valid for the training data?
+    public final static int NUM_EXAMPLES = 60000;
 
     public MNISTRecordReader() throws IOException {
     	
-		this.man = new MnistManager(MNIST_ROOT + trainingFilesFilename_unzipped, MNIST_ROOT + trainingFileLabelsFilename_unzipped);
+		this.man = new MnistManager(MNIST_ROOT + TRAINING_FILES_FILENAME_UNZIPPED, MNIST_ROOT + TRAINING_FILE_LABELS_FILENAME_UNZIPPED);
     	
     	this.numOutcomes = 10;
         this.binarize = binarize;
@@ -263,7 +257,7 @@ public class MNISTRecordReader implements RecordReader {
         	/*
             if (man == null) {
                 try {
-                    man = new MnistManager(MNIST_ROOT + MnistFetcher.trainingFilesFilename_unzipped,MNIST_ROOT + MnistFetcher.trainingFileLabelsFilename_unzipped);
+                    man = new MnistManager(MNIST_ROOT + MnistFetcher.TRAINING_FILES_FILENAME_UNZIPPED,MNIST_ROOT + MnistFetcher.TRAINING_FILE_LABELS_FILENAME_UNZIPPED);
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }

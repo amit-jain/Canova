@@ -10,7 +10,7 @@ public class TestImageVectorizationEngine {
         String TEMP_ROOT = System.getProperty("user.home");
         String MNIST_ROOT = TEMP_ROOT + File.separator + "MNIST" + File.separator;   
         
-        String MNIST_Filename = MNIST_ROOT + MNISTRecordReader.trainingFilesFilename_unzipped;
+        String MNIST_Filename = MNIST_ROOT + MNISTRecordReader.TRAINING_FILES_FILENAME_UNZIPPED;
     	
     	// 1. check for the MNIST data first!
     	
