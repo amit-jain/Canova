@@ -1,6 +1,5 @@
 package org.canova.spark.functions;
 
-import lombok.AllArgsConstructor;
 import org.apache.spark.api.java.function.Function;
 import org.canova.api.records.reader.RecordReader;
 import org.canova.api.split.StringSplit;
@@ -14,10 +13,12 @@ import java.util.Collection;
  *
  * @author Alex Black
  */
-@AllArgsConstructor
 public class LineRecordReaderFunction implements Function<String,Collection<Writable>> {
-
     private final RecordReader recordReader;
+
+    public LineRecordReaderFunction(RecordReader recordReader){
+        this.recordReader = recordReader;
+    }
 
     @Override
     public Collection<Writable> call(String s) throws Exception {
