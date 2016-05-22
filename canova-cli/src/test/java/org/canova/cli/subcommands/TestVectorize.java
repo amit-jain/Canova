@@ -20,15 +20,6 @@
 
 package org.canova.cli.subcommands;
 
-import static org.junit.Assert.*;
-
-import java.io.File;
-import java.io.IOException;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-
 import org.apache.commons.io.FileUtils;
 import org.canova.api.conf.Configuration;
 import org.canova.api.formats.input.InputFormat;
@@ -41,22 +32,18 @@ import org.canova.image.loader.LFWLoader;
 import org.canova.image.recordreader.MNISTRecordReader;
 import org.junit.Test;
 
+import java.io.File;
+import java.io.IOException;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
+import static org.junit.Assert.assertEquals;
+
 public class TestVectorize {
 
-    private static final String trainingFilesFilename = "images-idx1-ubyte.gz";
-    private static final String trainingFilesURL = "http://yann.lecun.com/exdb/mnist/train-images-idx3-ubyte.gz";
-    public static final String trainingFilesFilename_unzipped = "images-idx1-ubyte";
-
-    private static final String trainingFileLabelsURL = "http://yann.lecun.com/exdb/mnist/train-labels-idx1-ubyte.gz";
-    private static final String trainingFileLabelsFilename = "labels-idx1-ubyte.gz";
-    public static final String trainingFileLabelsFilename_unzipped = "labels-idx1-ubyte";
-
-
-    static String TEMP_ROOT = "/tmp"; //System.getProperty("user.home");
-    static String MNIST_ROOT = TEMP_ROOT + File.separator + "MNIST" + File.separator;
-
-    static String MNIST_Filename = MNIST_ROOT + MNISTRecordReader.trainingFilesFilename_unzipped;
-
+    private static final String MNIST_FILENAME = MNISTRecordReader.MNIST_ROOT + MNISTRecordReader.TRAINING_FILES_FILENAME_UNZIPPED;
 
     public void checkForMNISTLocally() {
 
@@ -67,13 +54,13 @@ public class TestVectorize {
 
         // if not, then let's download it
 
-        System.out.println( "Checking to see if MNIST exists locally: " + MNIST_ROOT );
+        System.out.println( "Checking to see if MNIST exists locally: " + MNISTRecordReader.MNIST_ROOT );
 
-        if(!new File(MNIST_ROOT).exists()) {
+        if(!new File(MNISTRecordReader.MNIST_ROOT).exists()) {
 
-            new File(MNIST_ROOT).mkdir();
+            new File(MNISTRecordReader.MNIST_ROOT).mkdir();
 
-            System.out.println("Downloading and unzipping the MNIST dataset locally to: " + MNIST_ROOT );
+            System.out.println("Downloading and unzipping the MNIST dataset locally to: " + MNISTRecordReader.MNIST_ROOT );
             try {
                 //new MnistFetcher().downloadAndUntar();
                 downloadAndUntar();
@@ -87,11 +74,11 @@ public class TestVectorize {
 
         }
 
-        if ( new File(MNIST_Filename).exists() ) {
+        if ( new File(MNIST_FILENAME).exists() ) {
             System.out.println( "The images file exists locally unzipped!" );
         } else {
             System.out.println( "The images file DOES NOT exist locally unzipped!" );
-            System.out.println("Downloading and unzipping the MNIST dataset locally to: " + MNIST_ROOT );
+            System.out.println("Downloading and unzipping the MNIST dataset locally to: " + MNISTRecordReader.MNIST_ROOT );
             try {
                 //new MnistFetcher().downloadAndUntar();
                 downloadAndUntar();
@@ -126,7 +113,7 @@ public class TestVectorize {
         // this data across restarts
         //File tmpDir = new File(System.getProperty("user.home"));
 
-        File baseDir = new File( MNIST_ROOT );
+        File baseDir = new File( MNISTRecordReader.MNIST_ROOT );
         if(!(baseDir.isDirectory() || baseDir.mkdir())) {
             throw new IOException("Could not mkdir " + baseDir);
         }
@@ -134,10 +121,10 @@ public class TestVectorize {
 
         //log.info("Downloading mnist...");
         // getFromOrigin training records
-        File tarFile = new File(baseDir, trainingFilesFilename);
+        File tarFile = new File(baseDir, MNISTRecordReader.TRAINING_FILES_FILENAME);
 
         if(!tarFile.isFile()) {
-            FileUtils.copyURLToFile(new URL(trainingFilesURL), tarFile);
+            FileUtils.copyURLToFile(new URL(MNISTRecordReader.TRAINING_FILES_URL), tarFile);
         }
 
         ArchiveUtils.unzipFileTo(tarFile.getAbsolutePath(),baseDir.getAbsolutePath());
@@ -146,10 +133,10 @@ public class TestVectorize {
 
 
         // getFromOrigin training records
-        File labels = new File(baseDir, trainingFileLabelsFilename);
+        File labels = new File(baseDir, MNISTRecordReader.TRAINING_FILE_LABELS_FILENAME);
 
         if(!labels.isFile()) {
-            FileUtils.copyURLToFile(new URL(trainingFileLabelsURL), labels);
+            FileUtils.copyURLToFile(new URL(MNISTRecordReader.TRAINING_FILE_LABELS_URL), labels);
         }
 
         ArchiveUtils.unzipFileTo(labels.getAbsolutePath(), baseDir.getAbsolutePath());
