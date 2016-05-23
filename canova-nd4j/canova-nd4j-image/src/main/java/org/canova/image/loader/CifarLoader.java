@@ -101,7 +101,6 @@ public class CifarLoader extends BaseImageLoader implements Serializable {
     }
 
     public void load()  {
-        defineLabels();
         if (!imageFilesExist() && !fullDir.exists()) {
             generateMaps();
             fullDir.mkdir();
@@ -109,6 +108,7 @@ public class CifarLoader extends BaseImageLoader implements Serializable {
             log.info("Downloading {}...", localDir);
             downloadAndUntar(cifarTrainData, fullDir);
         }
+        defineLabels();
     }
 
     public boolean imageFilesExist(){
