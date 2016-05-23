@@ -45,6 +45,11 @@ public class CifarLoader extends NativeImageLoader implements Serializable {
         this.version = version;
     }
 
+    public CifarLoader(int height, int width, int channels,String version){
+        super(height, width, channels);
+        this.version = version;
+    }
+
     public CifarLoader(String version, String localDir){
         this.version = version;
         this.localDir = localDir;
