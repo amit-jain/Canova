@@ -24,6 +24,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import org.apache.commons.io.IOUtils;
 import org.bytedeco.javacpp.indexer.UByteIndexer;
+import org.bytedeco.javacv.OpenCVFrameConverter;
+import org.canova.image.data.ImageWritable;
+import org.canova.image.transform.ImageTransform;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.factory.Nd4j;
 
@@ -37,6 +40,8 @@ import static org.bytedeco.javacpp.opencv_imgproc.*;
  * @author saudet
  */
 public class NativeImageLoader extends BaseImageLoader {
+
+    OpenCVFrameConverter.ToMat converter = null;
 
     public NativeImageLoader() {
     }
@@ -70,6 +75,12 @@ public class NativeImageLoader extends BaseImageLoader {
     public NativeImageLoader(int height, int width, int channels, boolean centerCropIfNeeded) {
         this(height, width, channels);
         this.centerCropIfNeeded = centerCropIfNeeded;
+    }
+
+    public NativeImageLoader(int height, int width, int channels, ImageTransform imageTransform) {
+        this(height, width, channels);
+        this.imageTransform = imageTransform;
+        this.converter = new OpenCVFrameConverter.ToMat();
     }
 
     /**
@@ -115,6 +126,12 @@ public class NativeImageLoader extends BaseImageLoader {
     }
 
     public INDArray asMatrix(Mat image) throws IOException {
+        if (imageTransform != null && converter != null) {
+            ImageWritable writable = new ImageWritable(converter.convert(image));
+            writable = imageTransform.transform(writable);
+            image = converter.convert(writable.getFrame());
+        }
+
         if (channels > 0 && image.channels() != channels) {
             int code = -1;
             switch (image.channels()) {

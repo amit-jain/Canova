@@ -102,6 +102,11 @@
             <artifactId>opencv</artifactId>
             <version>3.1.0-1.2</version>
         </dependency>
+        <dependency>
+            <groupId>org.bytedeco.javacpp-presets</groupId>
+            <artifactId>ffmpeg</artifactId>
+            <version>3.0.2-1.2</version>
+        </dependency>
     </dependencies>
 
 </project>
