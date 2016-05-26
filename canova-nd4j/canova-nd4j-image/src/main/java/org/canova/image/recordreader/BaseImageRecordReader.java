@@ -33,6 +33,7 @@ import org.canova.common.RecordConverter;
 import org.canova.image.loader.BaseImageLoader;
 import org.canova.image.loader.ImageLoader;
 import org.canova.image.loader.NativeImageLoader;
+import org.canova.image.transform.ImageTransform;
 import org.nd4j.linalg.api.ndarray.INDArray;
 
 import java.io.DataInputStream;
@@ -59,6 +60,7 @@ public abstract class BaseImageRecordReader implements RecordReader {
     protected boolean hitImage = false;
     protected int height = 28, width = 28, channels = 1;
     protected boolean cropImage = false;
+    protected ImageTransform imageTransform;
     protected BaseImageLoader imageLoader;
     protected InputSplit inputSplit;
     protected Map<String,String> fileNameMap = new LinkedHashMap<>();
@@ -115,14 +117,15 @@ public abstract class BaseImageRecordReader implements RecordReader {
     @Override
     public void initialize(InputSplit split) throws IOException{
         if (imageLoader == null) {
-            imageLoader = new NativeImageLoader(height, width, channels, cropImage);
+            imageLoader = new NativeImageLoader(height, width, channels, imageTransform);
         }
             inputSplit = split;
             if(split instanceof FileSplit) {
+                Collection<File> allFiles;
                 URI[] locations = split.locations();
                 if(locations != null && locations.length >= 1) {
                     if(locations.length > 1) {
-                        List<File> allFiles = new ArrayList<>();
+                        allFiles = new ArrayList<>();
                         for(URI location : locations) {
                             File imgFile = new File(location);
                             if(!imgFile.isDirectory() && containsFormat(imgFile.getAbsolutePath()))
@@ -138,18 +141,18 @@ public abstract class BaseImageRecordReader implements RecordReader {
                                 }
                             }
                         }
-                        iter = allFiles.listIterator();
-                    }
-                    else {
+                    } else {
                         File curr = new File(locations[0]);
                         if(!curr.exists())
                             throw new IllegalArgumentException("Path " + curr.getAbsolutePath() + " does not exist!");
-                        if(curr.isDirectory())
-                            iter =  FileUtils.iterateFiles(curr, null, true);
-                        else
-                            iter = Collections.singletonList(curr).listIterator();
+                        if(curr.isDirectory()) {
+                            allFiles = FileUtils.listFiles(curr, null, true);
+                        } else {
+                            allFiles = Collections.singletonList(curr);
+                        }
 
                     }
+                    iter = allFiles.iterator();
                 }
                 //remove the root directory
                 FileSplit split1 = (FileSplit) split;
@@ -195,10 +198,23 @@ public abstract class BaseImageRecordReader implements RecordReader {
         if ("imageio".equals(conf.get(IMAGE_LOADER))) {
             this.imageLoader = new ImageLoader(height, width, channels, cropImage);
         } else {
-            this.imageLoader = new NativeImageLoader(height, width, channels, cropImage);
+            this.imageLoader = new NativeImageLoader(height, width, channels, imageTransform);
         }
         this.conf = conf;
         initialize(split);
+    }
+
+
+    public void initialize(InputSplit split, ImageTransform imageTransform) throws IOException {
+        this.imageLoader = null;
+        this.imageTransform = imageTransform;
+        initialize(split);
+    }
+
+    public void initialize(Configuration conf, InputSplit split, ImageTransform imageTransform) throws IOException, InterruptedException {
+        this.imageLoader = null;
+        this.imageTransform = imageTransform;
+        initialize(conf, split);
     }
 
 

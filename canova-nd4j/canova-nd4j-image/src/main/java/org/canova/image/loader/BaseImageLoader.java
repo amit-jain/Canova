@@ -5,6 +5,7 @@ import org.canova.api.records.reader.RecordReader;
 import org.canova.api.split.LimitFileSplit;
 import org.canova.api.util.ArchiveUtils;
 import org.canova.image.recordreader.ImageRecordReader;
+import org.canova.image.transform.ImageTransform;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,6 +33,7 @@ public abstract class BaseImageLoader implements Serializable {
     protected int width = -1;
     protected int channels = -1;
     protected boolean centerCropIfNeeded = false;
+    protected ImageTransform imageTransform = null;
 
     public String[] getAllowedFormats() {
         return ALLOWED_FORMATS;
