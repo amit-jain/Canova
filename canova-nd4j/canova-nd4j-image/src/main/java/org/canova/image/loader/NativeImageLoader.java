@@ -23,7 +23,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import org.apache.commons.io.IOUtils;
-import org.bytedeco.javacpp.indexer.UByteIndexer;
+import org.bytedeco.javacpp.indexer.Indexer;
 import org.bytedeco.javacv.OpenCVFrameConverter;
 import org.canova.image.data.ImageWritable;
 import org.canova.image.transform.ImageTransform;
@@ -106,8 +106,7 @@ public class NativeImageLoader extends BaseImageLoader {
 
     @Override
     public INDArray asMatrix(File f) throws IOException {
-        Mat image = imread(f.getAbsolutePath(), channels == 1 ? CV_LOAD_IMAGE_GRAYSCALE
-                : channels == 3 ? CV_LOAD_IMAGE_COLOR : CV_LOAD_IMAGE_UNCHANGED);
+        Mat image = imread(f.getAbsolutePath(), CV_LOAD_IMAGE_ANYDEPTH | CV_LOAD_IMAGE_ANYCOLOR);
         if (image == null) {
             throw new IOException("Could not read image from file: " + f);
         }
@@ -117,8 +116,7 @@ public class NativeImageLoader extends BaseImageLoader {
     @Override
     public INDArray asMatrix(InputStream is) throws IOException {
         byte[] bytes = IOUtils.toByteArray(is);
-        Mat image = imdecode(new Mat(bytes), channels == 1 ? CV_LOAD_IMAGE_GRAYSCALE
-                : channels == 3 ? CV_LOAD_IMAGE_COLOR : CV_LOAD_IMAGE_UNCHANGED);
+        Mat image = imdecode(new Mat(bytes), CV_LOAD_IMAGE_ANYDEPTH | CV_LOAD_IMAGE_ANYCOLOR);
         if (image == null) {
             throw new IOException("Could not decode image from input stream");
         }
@@ -169,15 +167,15 @@ public class NativeImageLoader extends BaseImageLoader {
         int rows = image.rows();
         int cols = image.cols();
         int channels = image.channels();
-        UByteIndexer idx = image.createIndexer();
+        Indexer idx = image.createIndexer();
         INDArray ret = channels > 1 ? Nd4j.create(channels, rows, cols) : Nd4j.create(rows, cols);
         for (int k = 0; k < channels; k++) {
             for (int i = 0; i < rows; i++) {
                 for (int j = 0; j < cols; j++) {
                     if (channels > 1) {
-                        ret.putScalar(k, i, j, idx.get(i, j, k));
+                        ret.putScalar(k, i, j, idx.getDouble(i, j, k));
                     } else {
-                        ret.putScalar(i, j, idx.get(i, j));
+                        ret.putScalar(i, j, idx.getDouble(i, j));
                     }
                 }
             }
