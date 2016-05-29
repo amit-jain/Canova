@@ -1,4 +1,4 @@
-package org.nd4j;
+package org.canova.camel.component;
 
 import java.util.Map;
 
@@ -20,6 +20,7 @@ public class CanovaComponent extends UriEndpointComponent {
         super(context, CanovaEndpoint.class);
     }
 
+    @Override
     protected Endpoint createEndpoint(String uri, String remaining, Map<String, Object> parameters) throws Exception {
         Endpoint endpoint = new CanovaEndpoint(uri, this);
         setProperties(endpoint, parameters);

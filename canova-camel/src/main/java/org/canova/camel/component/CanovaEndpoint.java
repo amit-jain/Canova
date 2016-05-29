@@ -1,5 +1,6 @@
-package org.nd4j;
+package org.canova.camel.component;
 
+import lombok.Data;
 import org.apache.camel.Consumer;
 import org.apache.camel.Processor;
 import org.apache.camel.Producer;
@@ -11,13 +12,15 @@ import org.apache.camel.spi.UriPath;
 
 /**
  * Represents a canova endpoint.
+ * @author Adam Gibson
  */
 @UriEndpoint(scheme = "canova", title = "canova", syntax="canova:name", consumerClass = CanovaConsumer.class, label = "canova")
+@Data
 public class CanovaEndpoint extends DefaultEndpoint {
     @UriPath @Metadata(required = "true")
-    private String name;
-    @UriParam(defaultValue = "10")
-    private int option = 10;
+    private String inputFomrat;
+    @UriParam(defaultValue = "")
+    private String outputFormat;
 
     public CanovaEndpoint() {
     }
@@ -42,25 +45,4 @@ public class CanovaEndpoint extends DefaultEndpoint {
         return true;
     }
 
-    /**
-     * Some description of this option, and what it does
-     */
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    /**
-     * Some description of this option, and what it does
-     */
-    public void setOption(int option) {
-        this.option = option;
-    }
-
-    public int getOption() {
-        return option;
-    }
 }
