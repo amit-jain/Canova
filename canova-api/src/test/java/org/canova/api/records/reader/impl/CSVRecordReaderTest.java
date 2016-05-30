@@ -66,6 +66,25 @@ public class CSVRecordReaderTest {
     }
 
     @Test
+    public void testResetWithSkipLines() throws Exception {
+        CSVRecordReader rr = new CSVRecordReader(10,",");
+        rr.initialize(new FileSplit(new ClassPathResource("iris.dat").getFile()));
+        int lineCount = 0;
+        while(rr.hasNext()) {
+            rr.next();
+            ++lineCount;
+        }
+        assertEquals(140, lineCount);
+        rr.reset();
+        lineCount = 0;
+        while(rr.hasNext()) {
+            rr.next();
+            ++lineCount;
+        }
+        assertEquals(140, lineCount);
+    }
+
+    @Test
     public void testWrite() throws Exception {
 
         List<Collection<Writable>> list = new ArrayList<>();

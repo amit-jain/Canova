@@ -102,4 +102,9 @@ public class CSVRecordReader extends LineRecordReader {
         throw new UnsupportedOperationException("Reading CSV data from DataInputStream not yet implemented");
     }
 
+    @Override
+    public void reset() {
+        super.reset();
+        skippedLines = false;
+    }
 }
