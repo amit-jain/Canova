@@ -22,8 +22,9 @@ public class CanovaComponent extends UriEndpointComponent {
 
     @Override
     protected Endpoint createEndpoint(String uri, String remaining, Map<String, Object> parameters) throws Exception {
-        Endpoint endpoint = new CanovaEndpoint(uri, this);
+        CanovaEndpoint endpoint = new CanovaEndpoint(uri, this);
         setProperties(endpoint, parameters);
+        endpoint.setInputFormat(remaining);
         return endpoint;
     }
 }

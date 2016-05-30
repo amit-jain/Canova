@@ -9,21 +9,23 @@ import org.apache.camel.spi.Metadata;
 import org.apache.camel.spi.UriEndpoint;
 import org.apache.camel.spi.UriParam;
 import org.apache.camel.spi.UriPath;
+import org.canova.api.io.converters.SelfWritableConverter;
 
 /**
  * Represents a canova endpoint.
  * @author Adam Gibson
  */
-@UriEndpoint(scheme = "canova", title = "canova", syntax="canova:name", consumerClass = CanovaConsumer.class, label = "canova")
+@UriEndpoint(scheme = "canova", title = "canova", syntax="canova:inputFormat/?outputFormat=?&inputMarshaller=?", consumerClass = CanovaConsumer.class,label = "canova")
 @Data
 public class CanovaEndpoint extends DefaultEndpoint {
     @UriPath @Metadata(required = "true")
-    private String inputFomrat;
+    private String inputFormat;
     @UriParam(defaultValue = "")
     private String outputFormat;
-
-    public CanovaEndpoint() {
-    }
+    @UriParam @Metadata(required = "true")
+    private String inputMarshaller;
+    @UriParam(defaultValue = "org.canova.api.io.converters.SelfWritableConverter")
+    private String writableConverter;
 
     public CanovaEndpoint(String uri, CanovaComponent component) {
         super(uri, component);
