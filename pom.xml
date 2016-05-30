@@ -35,6 +35,7 @@
         <module>canova-cli</module>
         <module>canova-hadoop</module>
         <module>canova-spark</module>
+        <module>canova-camel</module>
     </modules>
     <name>Canova</name>
 
