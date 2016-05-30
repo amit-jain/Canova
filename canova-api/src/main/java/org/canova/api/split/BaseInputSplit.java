@@ -65,6 +65,14 @@ public abstract class BaseInputSplit implements InputSplit {
         throw new UnsupportedOperationException();
     }
 
+    /**
+     * Samples the locations based on the PathFilter and splits the result into
+     * an array of InputSplit objects, with sizes proportional to the weights.
+     *
+     * @param pathFilter to modify the locations in some way (null == as is)
+     * @param weights    to split the locations into multiple InputSplit
+     * @return           the sampled locations
+     */
     // TODO: Specialize in InputStreamInputSplit and others for CSVRecordReader, etc
     public InputSplit[] sample(PathFilter pathFilter, double... weights) {
         URI[] paths = pathFilter != null ? pathFilter.filter(locations()) : locations();

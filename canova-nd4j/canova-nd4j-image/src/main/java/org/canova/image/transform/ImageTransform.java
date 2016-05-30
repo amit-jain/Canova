@@ -23,13 +23,28 @@ import java.util.Random;
 import org.canova.image.data.ImageWritable;
 
 /**
+ * Transforms an image in some way, either deterministically or randomly.
  *
  * @author saudet
  */
 public interface ImageTransform {
 
+    /**
+     * Takes an image and returns a transformed image.
+     *
+     * @param image to transform
+     * @return      transformed image
+     */
     ImageWritable transform(ImageWritable image);
 
+    /**
+     * Takes an image and returns a transformed image.
+     * Uses the random object in the case of random transformations.
+     *
+     * @param image  to transform
+     * @param random object to use (or null for deterministic)
+     * @return       transformed image
+     */
     ImageWritable transform(ImageWritable image, Random random);
 
 }

@@ -27,6 +27,7 @@ import static org.bytedeco.javacpp.opencv_core.*;
 import static org.bytedeco.javacpp.opencv_imgproc.*;
 
 /**
+ * Scales images deterministically or randomly.
  *
  * @author saudet
  */
@@ -34,18 +35,28 @@ public class ScaleImageTransform extends BaseImageTransform<Mat> {
 
     float dx, dy;
 
+    /** Calls {@code this(null, delta, delta)}. */
     public ScaleImageTransform(float delta) {
         this(null, delta, delta);
     }
 
+    /** Calls {@code this(random, delta, delta)}. */
     public ScaleImageTransform(Random random, float delta) {
         this(random, delta, delta);
     }
 
+    /** Calls {@code this(null, dx, dy)}. */
     public ScaleImageTransform(float dx, float dy) {
         this(null, dx, dy);
     }
 
+    /**
+     * Constructs an instance of the ImageTransform.
+     *
+     * @param random object to use (or null for deterministic)
+     * @param dx     maximum scaling in width of the image (pixels)
+     * @param dy     maximum scaling in height of the image (pixels)
+     */
     public ScaleImageTransform(Random random, float dx, float dy) {
         super(random);
         this.dx = dx;

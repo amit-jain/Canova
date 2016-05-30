@@ -26,6 +26,7 @@ import org.canova.image.data.ImageWritable;
 import static org.bytedeco.javacpp.opencv_core.*;
 
 /**
+ * Crops images deterministically or randomly.
  *
  * @author saudet
  */
@@ -33,18 +34,30 @@ public class CropImageTransform extends BaseImageTransform<Mat> {
 
     int cropTop, cropLeft, cropBottom, cropRight;
 
+    /** Calls {@code this(null, crop, crop, crop, crop)}. */
     public CropImageTransform(int crop) {
         this(null, crop, crop, crop, crop);
     }
 
+    /** Calls {@code this(random, crop, crop, crop, crop)}. */
     public CropImageTransform(Random random, int crop) {
         this(random, crop, crop, crop, crop);
     }
 
+    /** Calls {@code this(random, cropTop, cropLeft, cropBottom, cropRight)}. */
     public CropImageTransform(int cropTop, int cropLeft, int cropBottom, int cropRight) {
         this(null, cropTop, cropLeft, cropBottom, cropRight);
     }
 
+    /**
+     * Constructs an instance of the ImageTransform.
+     *
+     * @param random     object to use (or null for deterministic)
+     * @param cropTop    maximum cropping of the top of the image (pixels)
+     * @param cropLeft   maximum cropping of the left of the image (pixels)
+     * @param cropBottom maximum cropping of the bottom of the image (pixels)
+     * @param cropRight  maximum cropping of the right of the image (pixels)
+     */
     public CropImageTransform(Random random, int cropTop, int cropLeft, int cropBottom, int cropRight) {
         super(random);
         this.cropTop = cropTop;

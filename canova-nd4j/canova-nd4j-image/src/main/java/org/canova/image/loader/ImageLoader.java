@@ -93,6 +93,14 @@ public class ImageLoader extends BaseImageLoader {
         this.channels = channels;
     }
 
+    /**
+     * Instantiate an image with the given
+     * height and width
+     * @param height the height to load
+     * @param width  the width to load
+     * @param channels the number of channels for the image*
+     * @param centerCropIfNeeded to crop before rescaling and converting
+     */
     public ImageLoader(int height, int width, int channels, boolean centerCropIfNeeded) {
         this(height, width, channels);
         this.centerCropIfNeeded = centerCropIfNeeded;

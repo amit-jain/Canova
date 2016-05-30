@@ -22,6 +22,7 @@ package org.canova.api.io.filters;
 import java.net.URI;
 
 /**
+ * Filters an array of paths in some way.
  *
  * @author saudet
  */
