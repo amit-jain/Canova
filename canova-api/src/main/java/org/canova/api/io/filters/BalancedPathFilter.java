@@ -28,6 +28,8 @@ import org.canova.api.io.labels.PathLabelGenerator;
 import org.canova.api.writable.Writable;
 
 /**
+ * Randomizes the order of paths in an array and removes paths randomly
+ * to have the same number of paths for each label.
  *
  * @author saudet
  */
@@ -36,9 +38,21 @@ public class BalancedPathFilter extends RandomPathFilter {
     protected PathLabelGenerator labelGenerator;
     protected int maxLabels = 0, maxPathsPerLabel = 0;
 
+    /** Calls {@code this(random, extensions, labelGenerator, 0, 0, 0)}. */
     public BalancedPathFilter(Random random, String[] extensions, PathLabelGenerator labelGenerator) {
         this(random, extensions, labelGenerator, 0, 0, 0);
     }
+
+    /**
+     * Constructs an instance of the PathFilter.
+     *
+     * @param random           object to use
+     * @param extensions       of files to keep
+     * @param labelGenerator   to obtain labels from paths
+     * @param maxPaths         max number of paths to return (0 == unlimited)
+     * @param maxLabels        max number of labels to return (0 == unlimited)
+     * @param maxPathsPerLabel max number of paths per labels to return (0 == unlimited)
+     */
     public BalancedPathFilter(Random random, String[] extensions, PathLabelGenerator labelGenerator,
             int maxPaths, int maxLabels, int maxPathsPerLabel) {
         super(random, extensions, maxPaths);

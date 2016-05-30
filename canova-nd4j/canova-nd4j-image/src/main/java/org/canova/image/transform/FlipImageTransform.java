@@ -26,6 +26,7 @@ import org.canova.image.data.ImageWritable;
 import static org.bytedeco.javacpp.opencv_core.*;
 
 /**
+ * Flips images deterministically or randomly.
  *
  * @author saudet
  */
@@ -33,15 +34,30 @@ public class FlipImageTransform extends BaseImageTransform<Mat> {
 
     int flipMode;
 
+    /** Calls {@code this(null)}. */
     public FlipImageTransform() {
         this(null);
     }
 
+    /**
+     * Calls {@code this(null)} and sets the flip mode.
+     *
+     * @param flipMode the deterministic flip mode
+     *                 {@code  0} Flips around x-axis.
+     *                 {@code >0} Flips around y-axis.
+     *                 {@code <0} Flips around both axes.
+     */
     public FlipImageTransform(int flipMode) {
         this(null);
         this.flipMode = flipMode;
     }
 
+    /**
+     * Constructs an instance of the ImageTransform. Randomly does not flip,
+     * or flips horizontally or vertically, or both.
+     *
+     * @param random object to use (or null for deterministic)
+     */
     public FlipImageTransform(Random random) {
         super(random);
         converter = new OpenCVFrameConverter.ToMat();

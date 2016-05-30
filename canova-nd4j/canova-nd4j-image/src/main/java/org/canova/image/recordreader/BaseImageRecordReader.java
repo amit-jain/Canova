@@ -205,12 +205,27 @@ public abstract class BaseImageRecordReader implements RecordReader {
     }
 
 
+    /**
+     * Called once at initialization.
+     * @param split the split that defines the range of records to read
+     * @param imageTransform the image transform to use to transform images while loading them
+     * @throws java.io.IOException
+     * @throws InterruptedException
+     */
     public void initialize(InputSplit split, ImageTransform imageTransform) throws IOException {
         this.imageLoader = null;
         this.imageTransform = imageTransform;
         initialize(split);
     }
 
+    /**
+     * Called once at initialization.
+     * @param conf a configuration for initialization
+     * @param split the split that defines the range of records to read
+     * @param imageTransform the image transform to use to transform images while loading them
+     * @throws java.io.IOException
+     * @throws InterruptedException
+     */
     public void initialize(Configuration conf, InputSplit split, ImageTransform imageTransform) throws IOException, InterruptedException {
         this.imageLoader = null;
         this.imageTransform = imageTransform;
@@ -291,10 +306,12 @@ public abstract class BaseImageRecordReader implements RecordReader {
             labels.add(name);
     }
 
+    /** Returns the file loaded last by {@link #next()}. */
     public File getCurrentFile() {
         return currentFile;
     }
 
+    /** Sets manually the file returned by {@link #getCurrentFile()}. */
     public void setCurrentFile(File currentFile) {
         this.currentFile = currentFile;
     }
@@ -313,6 +330,7 @@ public abstract class BaseImageRecordReader implements RecordReader {
         }
     }
 
+    /** Returns {@code getLabels().size()}. */
     public int numLabels() { return labels.size(); }
 
     @Override

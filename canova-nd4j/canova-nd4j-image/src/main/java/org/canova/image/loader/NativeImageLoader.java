@@ -43,6 +43,9 @@ public class NativeImageLoader extends BaseImageLoader {
 
     OpenCVFrameConverter.ToMat converter = null;
 
+    /**
+     * Loads images with no scaling or conversion.
+     */
     public NativeImageLoader() {
     }
 
@@ -72,11 +75,27 @@ public class NativeImageLoader extends BaseImageLoader {
         this.channels = channels;
     }
 
+    /**
+     * Instantiate an image with the given
+     * height and width
+     * @param height the height to load
+     * @param width  the width to load
+     * @param channels the number of channels for the image*
+     * @param centerCropIfNeeded to crop before rescaling and converting
+     */
     public NativeImageLoader(int height, int width, int channels, boolean centerCropIfNeeded) {
         this(height, width, channels);
         this.centerCropIfNeeded = centerCropIfNeeded;
     }
 
+    /**
+     * Instantiate an image with the given
+     * height and width
+     * @param height the height to load
+     * @param width  the width to load
+     * @param channels the number of channels for the image*
+     * @param imageTransform to use before rescaling and converting
+     */
     public NativeImageLoader(int height, int width, int channels, ImageTransform imageTransform) {
         this(height, width, channels);
         this.imageTransform = imageTransform;

@@ -27,20 +27,31 @@ import org.canova.image.data.ImageWritable;
 import static org.bytedeco.javacpp.avutil.*;
 
 /**
+ * Filters images using FFmpeg (libavfilter):
+ * <a href="https://ffmpeg.org/ffmpeg-filters.html">FFmpeg Filters Documentation</a>.
  *
  * @author saudet
+ * @see FFmpegFrameFilter
  */
 public class FilterImageTransform extends BaseImageTransform {
 
     FFmpegFrameFilter filter;
 
+    /** Calls {@code this(filters, width, height, 3)}. */
     public FilterImageTransform(String filters, int width, int height) {
-        super(null);
-        filter = new FFmpegFrameFilter(filters, width, height);
+        this(filters, width, height, 3);
     }
 
+    /**
+     * Constructs a filtergraph out of the filter specification.
+     *
+     * @param filters  to use
+     * @param width    of the input images
+     * @param height   of the input images
+     * @param channels of the input images
+     */
     public FilterImageTransform(String filters, int width, int height, int channels) {
-        this(filters, width, height);
+        super(null);
         int pixelFormat = channels == 1 ? AV_PIX_FMT_GRAY8
                 : channels == 3 ? AV_PIX_FMT_BGR24
                 : channels == 4 ? AV_PIX_FMT_RGBA : AV_PIX_FMT_NONE;
@@ -48,6 +59,7 @@ public class FilterImageTransform extends BaseImageTransform {
             throw new IllegalArgumentException("Unsupported number of channels: " + channels);
         }
         try {
+            filter = new FFmpegFrameFilter(filters, width, height);
             filter.setPixelFormat(pixelFormat);
             filter.start();
         } catch (FrameFilter.Exception e) {

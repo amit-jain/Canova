@@ -27,6 +27,7 @@ import static org.bytedeco.javacpp.opencv_core.*;
 import static org.bytedeco.javacpp.opencv_imgproc.*;
 
 /**
+ * Warps the perspective of images deterministically or randomly.
  *
  * @author saudet
  */
@@ -34,19 +35,35 @@ public class WarpImageTransform extends BaseImageTransform<Mat> {
 
     float[] deltas;
 
+    /** Calls {@code this(null, delta, delta, delta, delta, delta, delta, delta, delta)}. */
     public WarpImageTransform(float delta) {
         this(null, delta, delta, delta, delta, delta, delta, delta, delta);
     }
 
+    /** Calls {@code this(random, delta, delta, delta, delta, delta, delta, delta, delta)}. */
     public WarpImageTransform(Random random, float delta) {
         this(random, delta, delta, delta, delta, delta, delta, delta, delta);
     }
 
+    /** Calls {@code this(null, dx1, dy1, dx2, dy2, dx3, dy3, dx4, dy4)}. */
     public WarpImageTransform(float dx1, float dy1, float dx2, float dy2,
                               float dx3, float dy3, float dx4, float dy4) {
         this(null, dx1, dy1, dx2, dy2, dx3, dy3, dx4, dy4);
     }
 
+    /**
+     * Constructs an instance of the ImageTransform.
+     *
+     * @param random object to use (or null for deterministic)
+     * @param dx1    maximum warping in x for the top-left corner (pixels)
+     * @param dy1    maximum warping in y for the top-left corner (pixels)
+     * @param dx2    maximum warping in x for the top-right corner (pixels)
+     * @param dy2    maximum warping in y for the top-right corner (pixels)
+     * @param dx3    maximum warping in x for the bottom-right corner (pixels)
+     * @param dy3    maximum warping in y for the bottom-right corner (pixels)
+     * @param dx4    maximum warping in x for the bottom-left corner (pixels)
+     * @param dy4    maximum warping in y for the bottom-left corner (pixels)
+     */
     public WarpImageTransform(Random random, float dx1, float dy1, float dx2, float dy2,
                                              float dx3, float dy3, float dx4, float dy4) {
         super(random);

@@ -25,6 +25,7 @@ import org.canova.image.data.ImageWritable;
 import static org.bytedeco.javacpp.opencv_core.*;
 
 /**
+ * Transforms images deterministically or randomly with the help of an array of ImageTransform.
  *
  * @author saudet
  */
@@ -32,10 +33,20 @@ public class MultiImageTransform extends BaseImageTransform<Mat> {
 
     ImageTransform[] imageTransforms = null;
 
+    /** Calls {@code this(null, transforms)}. */
     public MultiImageTransform(ImageTransform... transforms) {
         this(null, transforms);
     }
 
+    /**
+     * Constructs an instance of the ImageTransform. Uses the random
+     * object to call the {@link ImageTransform#transform(ImageWritable, Random)}.
+     * methods one after the other. If {@code random == null}, calls instead the
+     * {@link ImageTransform#transform(ImageWritable)} ones.
+     *
+     * @param random     object to use (or null for deterministic)
+     * @param transforms to use to transform the images
+     */
     public MultiImageTransform(Random random, ImageTransform... transforms) {
         super(random);
         imageTransforms = transforms;

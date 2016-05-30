@@ -25,6 +25,9 @@ import org.canova.image.data.ImageWritable;
 
 /**
  *
+ * Implements the ImageTransform interface by providing its subclasses
+ * with a random object to use in the case of random transformations.
+ *
  * @author saudet
  */
 public abstract class BaseImageTransform<F> implements ImageTransform {

@@ -25,6 +25,7 @@ import java.util.Collections;
 import java.util.Random;
 
 /**
+ * Randomizes the order of paths in an array.
  *
  * @author saudet
  */
@@ -34,9 +35,18 @@ public class RandomPathFilter implements PathFilter {
     protected String[] extensions;
     protected int maxPaths = 0;
 
+    /** Calls {@code this(random, extensions, 0)}. */
     public RandomPathFilter(Random random, String... extensions) {
         this(random, extensions, 0);
     }
+
+    /**
+     * Constructs an instance of the PathFilter.
+     *
+     * @param random     object to use
+     * @param extensions of files to keep
+     * @param maxPaths   max number of paths to return (0 == unlimited)
+     */
     public RandomPathFilter(Random random, String[] extensions, int maxPaths) {
         this.random = random;
         this.extensions = extensions;
