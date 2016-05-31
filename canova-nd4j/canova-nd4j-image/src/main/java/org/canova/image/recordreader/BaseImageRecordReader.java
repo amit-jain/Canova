@@ -24,7 +24,9 @@ import org.apache.commons.io.FileUtils;
 import org.canova.api.conf.Configuration;
 import org.canova.api.io.data.DoubleWritable;
 import org.canova.api.io.data.Text;
+import org.canova.api.io.labels.PathLabelGenerator;
 import org.canova.api.records.reader.RecordReader;
+import org.canova.api.split.BaseInputSplit;
 import org.canova.api.split.FileSplit;
 import org.canova.api.split.InputSplit;
 import org.canova.api.split.InputStreamInputSplit;
@@ -54,7 +56,8 @@ public abstract class BaseImageRecordReader implements RecordReader {
     protected Iterator<File> iter;
     protected Configuration conf;
     protected File currentFile;
-    public List<String> labels  = new ArrayList<>();
+    protected PathLabelGenerator labelGenerator = null;
+    protected List<String> labels  = new ArrayList<>();
     protected boolean appendLabel = false;
     protected Collection<Writable> record;
     protected boolean hitImage = false;
@@ -76,11 +79,21 @@ public abstract class BaseImageRecordReader implements RecordReader {
     public BaseImageRecordReader() {
     }
 
+    public BaseImageRecordReader(int height, int width, int channels, PathLabelGenerator labelGenerator) {
+        this.height = height;
+        this.width = width;
+        this.channels = channels;
+        this.labelGenerator = labelGenerator;
+        this.appendLabel = true;
+    }
+
+    @Deprecated
     public BaseImageRecordReader(int height, int width, int channels, List<String> labels) {
         this(height, width, channels, false);
         this.labels = labels;
     }
 
+    @Deprecated
     public BaseImageRecordReader(int height, int width, int channels, boolean appendLabel) {
         this.appendLabel = appendLabel;
         this.height = height;
@@ -89,17 +102,20 @@ public abstract class BaseImageRecordReader implements RecordReader {
     }
 
 
+    @Deprecated
     public BaseImageRecordReader(int height, int width, int channels, boolean appendLabel, List<String> labels) {
         this(height, width, channels, appendLabel);
         this.labels = labels;
     }
 
+    @Deprecated
     public BaseImageRecordReader(int height, int width, int channels, boolean appendLabel, String pattern, int patternPosition) {
         this(height, width, channels, appendLabel);
         this.pattern = pattern;
         this.patternPosition = patternPosition;
     }
 
+    @Deprecated
     public BaseImageRecordReader(int height, int width, int channels, boolean appendLabel, List<String> labels, String pattern, int patternPosition) {
         this(height, width, channels, appendLabel, labels);
         this.pattern = pattern;
@@ -120,7 +136,7 @@ public abstract class BaseImageRecordReader implements RecordReader {
             imageLoader = new NativeImageLoader(height, width, channels, imageTransform);
         }
             inputSplit = split;
-            if(split instanceof FileSplit) {
+            if(split instanceof BaseInputSplit) {
                 Collection<File> allFiles;
                 URI[] locations = split.locations();
                 if(locations != null && locations.length >= 1) {
@@ -133,6 +149,9 @@ public abstract class BaseImageRecordReader implements RecordReader {
                             if(appendLabel){
                                 File parentDir = imgFile.getParentFile();
                                 String name = parentDir.getName();
+                                if (labelGenerator != null) {
+                                    name = labelGenerator.getLabelForPath(location).toString();
+                                }
                                 if(!labels.contains(name))
                                     labels.add(name);
                                 if(pattern != null) {
@@ -154,9 +173,11 @@ public abstract class BaseImageRecordReader implements RecordReader {
                     }
                     iter = allFiles.iterator();
                 }
-                //remove the root directory
-                FileSplit split1 = (FileSplit) split;
-                labels.remove(split1.getRootDir());
+                if (split instanceof FileSplit) {
+                    //remove the root directory
+                    FileSplit split1 = (FileSplit) split;
+                    labels.remove(split1.getRootDir());
+                }
             }
 
 
@@ -173,6 +194,9 @@ public abstract class BaseImageRecordReader implements RecordReader {
                         //could have been a uri
                         if (parent.contains("/")) {
                             parent = parent.substring(parent.lastIndexOf('/') + 1);
+                        }
+                        if (labelGenerator != null) {
+                            parent = labelGenerator.getLabelForPath(locations[0]).toString();
                         }
                         int label = labels.indexOf(parent);
                         if (label >= 0)
@@ -246,7 +270,7 @@ public abstract class BaseImageRecordReader implements RecordReader {
                 INDArray row = imageLoader.asRowVector(image);
                 ret = RecordConverter.toRecord(row);
                 if(appendLabel)
-                    ret.add(new DoubleWritable(labels.indexOf(image.getParentFile().getName())));
+                    ret.add(new DoubleWritable(labels.indexOf(getLabel(image.getPath()))));
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -292,6 +316,9 @@ public abstract class BaseImageRecordReader implements RecordReader {
      * @return the label for the given path
      */
     public String getLabel(String path) {
+        if (labelGenerator != null) {
+            return labelGenerator.getLabelForPath(path).toString();
+        }
         if(fileNameMap != null && fileNameMap.containsKey(path)) return fileNameMap.get(path);
         return (new File(path)).getParentFile().getName();
     }
