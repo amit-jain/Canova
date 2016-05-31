@@ -26,6 +26,9 @@ import org.canova.api.io.data.Text;
 import org.canova.api.writable.Writable;
 
 /**
+ * Returns a label derived from the base name of the path. Splits the base name
+ * of the path with the given regex pattern, and returns the patternPosition'th
+ * element of the array.
  *
  * @author saudet
  */

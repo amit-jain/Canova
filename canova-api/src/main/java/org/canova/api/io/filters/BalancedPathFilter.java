@@ -39,6 +39,7 @@ public class BalancedPathFilter extends RandomPathFilter {
 
     protected PathLabelGenerator labelGenerator;
     protected int maxLabels = 0, maxPathsPerLabel = 0;
+    protected String[] labels = null;
 
     /** Calls {@code this(random, extensions, labelGenerator, 0, 0, 0)}. */
     public BalancedPathFilter(Random random, String[] extensions, PathLabelGenerator labelGenerator) {
@@ -46,7 +47,9 @@ public class BalancedPathFilter extends RandomPathFilter {
     }
 
     /**
-     * Constructs an instance of the PathFilter.
+     * Constructs an instance of the PathFilter. If maxPathsPerLabel is specified,
+     * it might return an unbalanced set if the value is larger than the number of
+     * examples available for the label with the minimum amount.
      *
      * @param random           object to use
      * @param extensions       of files to keep
@@ -54,13 +57,27 @@ public class BalancedPathFilter extends RandomPathFilter {
      * @param maxPaths         max number of paths to return (0 == unlimited)
      * @param maxLabels        max number of labels to return (0 == unlimited)
      * @param maxPathsPerLabel max number of paths per labels to return (0 == unlimited)
+     * @param labels           of the paths to keep (empty set == keep all paths)
      */
     public BalancedPathFilter(Random random, String[] extensions, PathLabelGenerator labelGenerator,
-            int maxPaths, int maxLabels, int maxPathsPerLabel) {
+            int maxPaths, int maxLabels, int maxPathsPerLabel, String... labels) {
         super(random, extensions, maxPaths);
         this.labelGenerator = labelGenerator;
         this.maxLabels = maxLabels;
         this.maxPathsPerLabel = maxPathsPerLabel;
+        this.labels = labels;
+    }
+
+    protected boolean acceptLabel(String name) {
+        if (labels == null || labels.length == 0) {
+            return true;
+        }
+        for (String label : labels) {
+            if (name.equals(label)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override
@@ -71,6 +88,9 @@ public class BalancedPathFilter extends RandomPathFilter {
         for (int i = 0; i < paths.length; i++) {
             URI path = paths[i];
             Writable label = labelGenerator.getLabelForPath(path);
+            if (!acceptLabel(label.toString())) {
+                continue;
+            }
             List<URI> pathList = labelPaths.get(label);
             if (pathList == null) {
                 if (maxLabels > 0 && labelPaths.size() >= maxLabels) {
@@ -87,14 +107,16 @@ public class BalancedPathFilter extends RandomPathFilter {
                 minCount = pathList.size();
             }
         }
-        if (maxPathsPerLabel > 0 && minCount > maxPathsPerLabel) {
+        if (maxPathsPerLabel > 0) {
             minCount = maxPathsPerLabel;
         }
 
         ArrayList<URI> newpaths = new ArrayList<URI>();
         for (int i = 0; i < minCount; i++) {
             for (List<URI> p : labelPaths.values()) {
-                newpaths.add(p.get(i));
+                if (i < p.size()) {
+                    newpaths.add(p.get(i));
+                }
             }
         }
         return newpaths.toArray(new URI[newpaths.size()]);
