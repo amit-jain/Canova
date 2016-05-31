@@ -22,6 +22,7 @@ package org.canova.image.loader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.ByteOrder;
 import org.apache.commons.io.IOUtils;
 import org.bytedeco.javacpp.indexer.Indexer;
 import org.bytedeco.javacv.OpenCVFrameConverter;
@@ -30,6 +31,7 @@ import org.canova.image.transform.ImageTransform;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.factory.Nd4j;
 
+import static org.bytedeco.javacpp.lept.*;
 import static org.bytedeco.javacpp.opencv_core.*;
 import static org.bytedeco.javacpp.opencv_imgcodecs.*;
 import static org.bytedeco.javacpp.opencv_imgproc.*;
@@ -40,6 +42,10 @@ import static org.bytedeco.javacpp.opencv_imgproc.*;
  * @author saudet
  */
 public class NativeImageLoader extends BaseImageLoader {
+
+    public static final String[] ALLOWED_FORMATS =
+            {"bmp", "gif", "jpg", "jpeg", "jp2", "pbm", "pgm", "ppm", "pnm", "png", "tif", "tiff", "exr", "webp",
+             "BMP", "GIF", "JPG", "JPEG", "JP2", "PBM", "PGM", "PPM", "PNM", "PNG", "TIF", "TIFF", "EXR", "WEBP"};
 
     OpenCVFrameConverter.ToMat converter = null;
 
@@ -102,6 +108,11 @@ public class NativeImageLoader extends BaseImageLoader {
         this.converter = new OpenCVFrameConverter.ToMat();
     }
 
+    @Override
+    public String[] getAllowedFormats() {
+        return ALLOWED_FORMATS;
+    }
+
     /**
      * Convert a file to a row vector
      *
@@ -123,11 +134,48 @@ public class NativeImageLoader extends BaseImageLoader {
         return asMatrix(image).ravel();
     }
 
+    static Mat convert(PIX pix) {
+        PIX tempPix = null;
+        if (pix.colormap() != null) {
+            PIX pix2 = pixRemoveColormap(pix, REMOVE_CMAP_TO_FULL_COLOR);
+            tempPix = pix = pix2;
+        } else if (pix.d() < 8) {
+            PIX pix2 = null;
+            switch (pix.d()) {
+                case 1: pix2 = pixConvert1To8(null, pix, (byte)0, (byte)255); break;
+                case 2: pix2 = pixConvert2To8(pix, (byte)0, (byte)85, (byte)170, (byte)255, 0); break;
+                case 4: pix2 = pixConvert4To8(pix, 0); break;
+                default: assert false;
+            }
+            tempPix = pix = pix2;
+        }
+        int height = pix.h();
+        int width = pix.w();
+        int channels = pix.d() / 8;
+        Mat mat = new Mat(height, width, CV_8UC(channels), pix.data(), 4 * pix.wpl());
+        Mat mat2 = new Mat(height, width, CV_8UC(channels));
+        // swap bytes if needed
+        int[] swap = { 0,3, 1,2, 2,1, 3,0 },
+              copy = { 0,0, 1,1, 2,2, 3,3 },
+              fromTo = channels > 1 && ByteOrder.nativeOrder().equals(ByteOrder.LITTLE_ENDIAN)
+                     ? swap : copy;
+        mixChannels(mat, 1, mat2, 1, fromTo, fromTo.length / 2);
+        if (tempPix != null) {
+            pixDestroy(tempPix);
+        }
+        return mat2;
+    }
+
     @Override
     public INDArray asMatrix(File f) throws IOException {
         Mat image = imread(f.getAbsolutePath(), CV_LOAD_IMAGE_ANYDEPTH | CV_LOAD_IMAGE_ANYCOLOR);
-        if (image == null) {
-            throw new IOException("Could not read image from file: " + f);
+        if (image == null || image.empty()) {
+            PIX pix = pixRead(f.getAbsolutePath());
+            if (pix == null) {
+                throw new IOException("Could not read image from file: " + f);
+            }
+            image = convert(pix);
+            pixDestroy(pix);
         }
         return asMatrix(image);
     }
@@ -136,8 +184,13 @@ public class NativeImageLoader extends BaseImageLoader {
     public INDArray asMatrix(InputStream is) throws IOException {
         byte[] bytes = IOUtils.toByteArray(is);
         Mat image = imdecode(new Mat(bytes), CV_LOAD_IMAGE_ANYDEPTH | CV_LOAD_IMAGE_ANYCOLOR);
-        if (image == null) {
-            throw new IOException("Could not decode image from input stream");
+        if (image == null || image.empty()) {
+            PIX pix = pixReadMem(bytes, bytes.length);
+            if (pix == null) {
+                throw new IOException("Could not decode image from input stream");
+            }
+            image = convert(pix);
+            pixDestroy(pix);
         }
         return asMatrix(image);
     }
