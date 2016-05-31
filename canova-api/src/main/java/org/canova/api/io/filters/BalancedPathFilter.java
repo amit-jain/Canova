@@ -21,15 +21,17 @@ package org.canova.api.io.filters;
 
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import org.canova.api.io.labels.PathLabelGenerator;
 import org.canova.api.writable.Writable;
 
 /**
  * Randomizes the order of paths in an array and removes paths randomly
- * to have the same number of paths for each label.
+ * to have the same number of paths for each label. Further interlaces the paths
+ * on output based on their labels, to obtain easily optimal batches for training.
  *
  * @author saudet
  */
@@ -65,49 +67,36 @@ public class BalancedPathFilter extends RandomPathFilter {
     public URI[] filter(URI[] paths) {
         paths = super.filter(paths);
 
-        HashMap<Writable, Integer> labelsCount = new HashMap<Writable, Integer>();
+        Map<Writable, List<URI>> labelPaths  = new LinkedHashMap<Writable, List<URI>>();
         for (int i = 0; i < paths.length; i++) {
             URI path = paths[i];
             Writable label = labelGenerator.getLabelForPath(path);
-            Integer count = labelsCount.get(label);
-            if (count == null) {
-                if (maxLabels > 0 && labelsCount.size() >= maxLabels) {
+            List<URI> pathList = labelPaths.get(label);
+            if (pathList == null) {
+                if (maxLabels > 0 && labelPaths.size() >= maxLabels) {
                     continue;
                 }
-                count = 0;
+                labelPaths.put(label, pathList = new ArrayList<URI>());
             }
-            labelsCount.put(label, count + 1);
+            pathList.add(path);
         }
 
         int minCount = Integer.MAX_VALUE;
-        for (Integer count : labelsCount.values()) {
-            if (minCount > count) {
-                minCount = count;
+        for (List<URI> pathList : labelPaths.values()) {
+            if (minCount > pathList.size()) {
+                minCount = pathList.size();
             }
         }
         if (maxPathsPerLabel > 0 && minCount > maxPathsPerLabel) {
             minCount = maxPathsPerLabel;
         }
 
-        labelsCount.clear();
         ArrayList<URI> newpaths = new ArrayList<URI>();
-        for (int i = 0; i < paths.length; i++) {
-            URI path = paths[i];
-            Writable label = labelGenerator.getLabelForPath(path);
-            Integer count = labelsCount.get(label);
-            if (count == null) {
-                if (maxLabels > 0 && labelsCount.size() >= maxLabels) {
-                    continue;
-                }
-                count = 0;
-            }
-            labelsCount.put(label, count + 1);
-            if (count < minCount) {
-                newpaths.add(path);
+        for (int i = 0; i < minCount; i++) {
+            for (List<URI> p : labelPaths.values()) {
+                newpaths.add(p.get(i));
             }
         }
-
-        Collections.shuffle(newpaths, random);
         return newpaths.toArray(new URI[newpaths.size()]);
     }
 }
