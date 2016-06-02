@@ -7,6 +7,7 @@ import org.nd4j.linalg.api.buffer.DataBuffer;
 import org.nd4j.linalg.api.complex.IComplexDouble;
 import org.nd4j.linalg.api.complex.IComplexFloat;
 
+@Deprecated
 public class ImageByteBuffer extends BaseDataBuffer {
 
     public ImageByteBuffer(byte[] data, int length) {
@@ -79,6 +80,12 @@ public class ImageByteBuffer extends BaseDataBuffer {
 
     public IComplexDouble getComplexDouble(int i) {
         return null;
+    }
+
+    @Override
+    protected void initTypeAndSize() {
+        elementSize = 1;
+        type = Type.INT;
     }
 
     @Override
