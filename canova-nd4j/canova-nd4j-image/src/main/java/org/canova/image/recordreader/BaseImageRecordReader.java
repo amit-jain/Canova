@@ -26,9 +26,7 @@ import org.canova.api.io.data.DoubleWritable;
 import org.canova.api.io.data.Text;
 import org.canova.api.io.labels.PathLabelGenerator;
 import org.canova.api.records.reader.RecordReader;
-import org.canova.api.split.FileSplit;
-import org.canova.api.split.InputSplit;
-import org.canova.api.split.InputStreamInputSplit;
+import org.canova.api.split.*;
 import org.canova.api.writable.Writable;
 import org.canova.common.RecordConverter;
 import org.canova.image.loader.BaseImageLoader;
@@ -135,7 +133,7 @@ public abstract class BaseImageRecordReader implements RecordReader {
             imageLoader = new NativeImageLoader(height, width, channels, imageTransform);
         }
             inputSplit = split;
-            if(split instanceof FileSplit) {
+            if(split instanceof FileSplit || split instanceof CollectionInputSplit) {
                 Collection<File> allFiles;
                 URI[] locations = split.locations();
                 if(locations != null && locations.length >= 1) {
@@ -173,7 +171,7 @@ public abstract class BaseImageRecordReader implements RecordReader {
                     iter = allFiles.iterator();
                 }
                 //remove the root directory
-                FileSplit split1 = (FileSplit) split;
+                BaseInputSplit split1 = (BaseInputSplit) split;
                 labels.remove(split1.getRootDir());
             }
 

@@ -34,7 +34,6 @@ import java.util.*;
  */
 public class FileSplit extends BaseInputSplit {
 
-    protected File rootDir;
     // Use for Collections, pass in list of file type strings
     protected String[] allowFormat = null;
     protected boolean recursive = true;
@@ -121,9 +120,6 @@ public class FileSplit extends BaseInputSplit {
 
     }
 
-    public File getRootDir() {
-        return rootDir;
-    }
 }
 
 

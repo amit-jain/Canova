@@ -20,6 +20,7 @@
 
 package org.canova.api.split;
 
+import java.io.File;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -32,6 +33,7 @@ import org.canova.api.io.filters.PathFilter;
  */
 public abstract class BaseInputSplit implements InputSplit {
 
+    protected File rootDir;
     protected URI[] locations;
     protected long length = 0;
 
@@ -63,6 +65,10 @@ public abstract class BaseInputSplit implements InputSplit {
     @Override
     public long toLong(){
         throw new UnsupportedOperationException();
+    }
+
+    public File getRootDir() {
+        return rootDir;
     }
 
     /**
