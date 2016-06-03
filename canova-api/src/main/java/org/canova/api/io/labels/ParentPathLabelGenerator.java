@@ -26,6 +26,7 @@ import org.canova.api.io.data.Text;
 import org.canova.api.writable.Writable;
 
 /**
+ * Returns as label the base name of the parent file of the path (the directory).
  *
  * @author saudet
  */

@@ -38,29 +38,63 @@ import org.canova.api.writable.Writable;
 public class BalancedPathFilter extends RandomPathFilter {
 
     protected PathLabelGenerator labelGenerator;
-    protected int maxLabels = 0, maxPathsPerLabel = 0;
+    protected int maxLabels = 0, minPathsPerLabel = 0, maxPathsPerLabel = 0;
+    protected String[] labels = null;
 
-    /** Calls {@code this(random, extensions, labelGenerator, 0, 0, 0)}. */
+    /** Calls {@code this(random, extensions, labelGenerator, 0, 0, 0, 0)}. */
     public BalancedPathFilter(Random random, String[] extensions, PathLabelGenerator labelGenerator) {
-        this(random, extensions, labelGenerator, 0, 0, 0);
+        this(random, extensions, labelGenerator, 0, 0, 0, 0);
+    }
+
+    /** Calls {@code this(random, null, labelGenerator, 0, 0, 0, maxPathsPerLabel)}. */
+    public BalancedPathFilter(Random random, PathLabelGenerator labelGenerator, int maxPathsPerLabel) {
+        this(random, null, labelGenerator, 0, 0, 0, maxPathsPerLabel);
+    }
+
+    /** Calls {@code this(random, extensions, labelGenerator, 0, 0, 0, maxPathsPerLabel)}. */
+    public BalancedPathFilter(Random random, String[] extensions, PathLabelGenerator labelGenerator, int maxPathsPerLabel) {
+        this(random, extensions, labelGenerator, 0, 0, 0, maxPathsPerLabel);
+    }
+
+    /** Calls {@code this(random, extensions, labelGenerator, 0, maxLabels, 0, maxPathsPerLabel)}. */
+    public BalancedPathFilter(Random random, String[] extensions, PathLabelGenerator labelGenerator, int maxLabels, int maxPathsPerLabel) {
+        this(random, extensions, labelGenerator, 0, maxLabels, 0, maxPathsPerLabel);
     }
 
     /**
-     * Constructs an instance of the PathFilter.
+     * Constructs an instance of the PathFilter. If {@code minPathsPerLabel > 0},
+     * it might return an unbalanced set if the value is larger than the number of
+     * examples available for the label with the minimum amount.
      *
      * @param random           object to use
      * @param extensions       of files to keep
      * @param labelGenerator   to obtain labels from paths
      * @param maxPaths         max number of paths to return (0 == unlimited)
      * @param maxLabels        max number of labels to return (0 == unlimited)
+     * @param minPathsPerLabel min number of paths per labels to return
      * @param maxPathsPerLabel max number of paths per labels to return (0 == unlimited)
+     * @param labels           of the paths to keep (empty set == keep all paths)
      */
     public BalancedPathFilter(Random random, String[] extensions, PathLabelGenerator labelGenerator,
-            int maxPaths, int maxLabels, int maxPathsPerLabel) {
+            int maxPaths, int maxLabels, int minPathsPerLabel, int maxPathsPerLabel, String... labels) {
         super(random, extensions, maxPaths);
         this.labelGenerator = labelGenerator;
         this.maxLabels = maxLabels;
+        this.minPathsPerLabel = minPathsPerLabel;
         this.maxPathsPerLabel = maxPathsPerLabel;
+        this.labels = labels;
+    }
+
+    protected boolean acceptLabel(String name) {
+        if (labels == null || labels.length == 0) {
+            return true;
+        }
+        for (String label : labels) {
+            if (name.equals(label)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override
@@ -71,6 +105,9 @@ public class BalancedPathFilter extends RandomPathFilter {
         for (int i = 0; i < paths.length; i++) {
             URI path = paths[i];
             Writable label = labelGenerator.getLabelForPath(path);
+            if (!acceptLabel(label.toString())) {
+                continue;
+            }
             List<URI> pathList = labelPaths.get(label);
             if (pathList == null) {
                 if (maxLabels > 0 && labelPaths.size() >= maxLabels) {
@@ -81,20 +118,22 @@ public class BalancedPathFilter extends RandomPathFilter {
             pathList.add(path);
         }
 
-        int minCount = Integer.MAX_VALUE;
+        int minCount = maxPathsPerLabel > 0 ? maxPathsPerLabel : Integer.MAX_VALUE;
         for (List<URI> pathList : labelPaths.values()) {
             if (minCount > pathList.size()) {
                 minCount = pathList.size();
             }
         }
-        if (maxPathsPerLabel > 0 && minCount > maxPathsPerLabel) {
-            minCount = maxPathsPerLabel;
+        if (minCount < minPathsPerLabel) {
+            minCount = minPathsPerLabel;
         }
 
         ArrayList<URI> newpaths = new ArrayList<URI>();
         for (int i = 0; i < minCount; i++) {
             for (List<URI> p : labelPaths.values()) {
-                newpaths.add(p.get(i));
+                if (i < p.size()) {
+                    newpaths.add(p.get(i));
+                }
             }
         }
         return newpaths.toArray(new URI[newpaths.size()]);
