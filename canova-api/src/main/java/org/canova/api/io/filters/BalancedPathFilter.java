@@ -41,9 +41,24 @@ public class BalancedPathFilter extends RandomPathFilter {
     protected int maxLabels = 0, minPathsPerLabel = 0, maxPathsPerLabel = 0;
     protected String[] labels = null;
 
-    /** Calls {@code this(random, extensions, labelGenerator, 0, 0, 0)}. */
+    /** Calls {@code this(random, extensions, labelGenerator, 0, 0, 0, 0)}. */
     public BalancedPathFilter(Random random, String[] extensions, PathLabelGenerator labelGenerator) {
         this(random, extensions, labelGenerator, 0, 0, 0, 0);
+    }
+
+    /** Calls {@code this(random, null, labelGenerator, 0, 0, 0, maxPathsPerLabel)}. */
+    public BalancedPathFilter(Random random, PathLabelGenerator labelGenerator, int maxPathsPerLabel) {
+        this(random, null, labelGenerator, 0, 0, 0, maxPathsPerLabel);
+    }
+
+    /** Calls {@code this(random, extensions, labelGenerator, 0, 0, 0, maxPathsPerLabel)}. */
+    public BalancedPathFilter(Random random, String[] extensions, PathLabelGenerator labelGenerator, int maxPathsPerLabel) {
+        this(random, extensions, labelGenerator, 0, 0, 0, maxPathsPerLabel);
+    }
+
+    /** Calls {@code this(random, extensions, labelGenerator, 0, maxLabels, 0, maxPathsPerLabel)}. */
+    public BalancedPathFilter(Random random, String[] extensions, PathLabelGenerator labelGenerator, int maxLabels, int maxPathsPerLabel) {
+        this(random, extensions, labelGenerator, 0, maxLabels, 0, maxPathsPerLabel);
     }
 
     /**
