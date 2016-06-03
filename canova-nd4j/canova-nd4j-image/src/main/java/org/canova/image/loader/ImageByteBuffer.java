@@ -82,6 +82,11 @@ public class ImageByteBuffer extends BaseDataBuffer {
     }
 
     @Override
+    protected void initTypeAndSize() {
+
+    }
+
+    @Override
     public int getElementSize() {
         return this.elementSize;
     }
