@@ -22,8 +22,10 @@ package org.canova.nd4j.nlp.vectorizer;
 
 
 import org.canova.api.berkeley.Counter;
+import org.canova.api.io.data.IntWritable;
 import org.canova.api.records.reader.RecordReader;
 import org.canova.api.writable.Writable;
+import org.canova.nd4j.nlp.reader.TfidfRecordReader;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.factory.Nd4j;
 
@@ -56,25 +58,28 @@ public class TfidfVectorizer extends org.canova.nlp.vectorizer.TfidfVectorizer<I
     }
 
     @Override
-    public INDArray fitTransform(RecordReader reader, RecordCallBack callBack) {
+    public INDArray fitTransform(final RecordReader reader, RecordCallBack callBack) {
         final List<Collection<Writable>> records = new ArrayList<>();
-
+        final TfidfRecordReader reader2 = (TfidfRecordReader) reader;
         fit(reader,new RecordCallBack() {
             @Override
             public void onRecord(Collection<Writable> record) {
+                if(reader.getConf().get(TfidfRecordReader.APPEND_LABEL).equals("true")) {
+                    record.add(new IntWritable(reader2.getCurrentLabel()));
+                }
                 records.add(record);
             }
         });
 
         if(records.isEmpty())
             throw new IllegalStateException("No records found!");
-
         INDArray ret = Nd4j.create(records.size(),cache.vocabWords().size());
         int i = 0;
         for(Collection<Writable> record : records) {
             ret.putRow(i++, transform(record));
-            if(callBack != null)
+            if(callBack != null) {
                 callBack.onRecord(record);
+            }
         }
 
         return ret;

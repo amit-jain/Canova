@@ -27,24 +27,25 @@ import org.canova.api.split.InputSplit;
 import org.canova.api.vector.Vectorizer;
 import org.canova.api.writable.Writable;
 import org.canova.common.RecordConverter;
+import org.canova.common.data.NDArrayWritable;
 import org.canova.nd4j.nlp.vectorizer.TfidfVectorizer;
 import org.nd4j.linalg.api.ndarray.INDArray;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
+import java.util.*;
 
 /**
- * TFIDF record reader (wraps a tfidf vectorizer for delivering labels and conforming to the record reader interface)
+ * TFIDF record reader (wraps a tfidf vectorizer
+ * for delivering labels and conforming to the record reader interface)
  *
  * @author Adam Gibson
  */
 public class TfidfRecordReader extends FileRecordReader  {
     private TfidfVectorizer tfidfVectorizer;
     private Collection<Collection<Writable>> records = new ArrayList<>();
+    private List<Integer> recordLabels = new ArrayList<>();
+    private Iterator<Integer> labelIter;
     private Iterator<Collection<Writable>> recordIter;
-    private Configuration conf;
     private int numFeatures;
 
 
@@ -63,9 +64,13 @@ public class TfidfRecordReader extends FileRecordReader  {
             INDArray ret = tfidfVectorizer.fitTransform(this, new Vectorizer.RecordCallBack() {
                 @Override
                 public void onRecord(Collection<Writable> record) {
-                    records.add(record);
+                    Iterator<Writable> writableIterator = record.iterator();
+                    //skip the string
+                    writableIterator.next();
+                    recordLabels.add(writableIterator.next().toInt());
                 }
             });
+
             //clear out old strings
             records.clear();
             for(int i = 0; i< ret.rows(); i++) {
@@ -74,6 +79,7 @@ public class TfidfRecordReader extends FileRecordReader  {
 
             //cache the number of features used for each document
             numFeatures = ret.columns();
+            labelIter = recordLabels.iterator();
             recordIter = records.iterator();
         }
         else {
@@ -97,8 +103,9 @@ public class TfidfRecordReader extends FileRecordReader  {
         if(recordIter == null)
             return super.next();
         Collection<Writable> record = recordIter.next();
-        if(appendLabel)
-            record.add(new IntWritable(getCurrentLabel()));
+        if(appendLabel) {
+            record.add(new IntWritable(labelIter.next()));
+        }
         return record;
     }
 

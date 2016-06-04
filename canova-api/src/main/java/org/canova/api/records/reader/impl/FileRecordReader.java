@@ -103,6 +103,7 @@ public class FileRecordReader implements RecordReader {
         appendLabel = conf.getBoolean(APPEND_LABEL,true);
         doInitialize(split);
         this.inputSplit = split;
+        this.conf = conf;
     }
 
     @Override
@@ -140,7 +141,7 @@ public class FileRecordReader implements RecordReader {
      * in the label list
      * @return The index of the current file's parent directory
      */
-    protected int getCurrentLabel() {
+    public int getCurrentLabel() {
         return labels.indexOf(currentFile.getParentFile().getName());
     }
 
