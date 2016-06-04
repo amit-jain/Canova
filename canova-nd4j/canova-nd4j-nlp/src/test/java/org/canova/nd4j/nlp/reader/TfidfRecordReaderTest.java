@@ -25,13 +25,17 @@ import org.canova.api.records.reader.RecordReader;
 import org.canova.api.split.FileSplit;
 import org.canova.api.util.ClassPathResource;
 import org.canova.api.writable.Writable;
+import org.canova.common.data.NDArrayWritable;
 import org.canova.nd4j.nlp.vectorizer.TfidfVectorizer;
 import org.junit.Test;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
 
 import static org.junit.Assert.assertEquals;
-
+import static org.junit.Assert.assertArrayEquals;
 /**
  * @author Adam Gibson
  */
@@ -47,10 +51,16 @@ public class TfidfRecordReaderTest {
         TfidfRecordReader reader = new TfidfRecordReader();
         reader.initialize(conf, new FileSplit(new ClassPathResource("labeled").getFile()));
         int count = 0;
+        int[] labelAssertions = new int[3];
         while(reader.hasNext()) {
             Collection<Writable> record = reader.next();
+            Iterator<Writable> recordIter = record.iterator();
+            NDArrayWritable writable = (NDArrayWritable) recordIter.next();
+            labelAssertions[count] = recordIter.next().toInt();
             count++;
         }
+
+        assertArrayEquals(new int[]{0,1,2},labelAssertions);
         assertEquals(3,reader.getLabels().size());
         assertEquals(3,count);
     }
