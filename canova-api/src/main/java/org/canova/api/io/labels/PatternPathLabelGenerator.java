@@ -21,6 +21,7 @@ package org.canova.api.io.labels;
 
 import java.io.File;
 import java.net.URI;
+
 import org.apache.commons.io.FilenameUtils;
 import org.canova.api.io.data.Text;
 import org.canova.api.writable.Writable;
@@ -35,6 +36,10 @@ import org.canova.api.writable.Writable;
 public class PatternPathLabelGenerator implements PathLabelGenerator {
     protected String pattern; // Pattern to split and segment file name, pass in regex
     protected int patternPosition = 0;
+
+    public PatternPathLabelGenerator(String pattern) {
+        this.pattern = pattern;
+    }
 
     public PatternPathLabelGenerator(String pattern, int patternPosition) {
         this.pattern = pattern;

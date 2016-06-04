@@ -104,6 +104,7 @@ public class CifarLoader extends NativeImageLoader implements Serializable {
 
             while ((line = br.readLine()) != null) {
                 labels.add(line);
+                // TODO resolve duplicate listing
             }
         } catch (IOException e) {
             e.printStackTrace();

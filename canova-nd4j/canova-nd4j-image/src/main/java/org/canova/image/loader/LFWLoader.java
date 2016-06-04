@@ -21,7 +21,13 @@
 package org.canova.image.loader;
 
 
+import org.canova.api.io.filters.BalancedPathFilter;
+import org.canova.api.io.labels.ParentPathLabelGenerator;
+import org.canova.api.io.labels.PathLabelGenerator;
+import org.canova.api.io.labels.PatternPathLabelGenerator;
 import org.canova.api.records.reader.RecordReader;
+import org.canova.api.split.FileSplit;
+import org.canova.api.split.InputSplit;
 import org.canova.api.split.LimitFileSplit;
 import org.canova.image.recordreader.ImageRecordReader;
 import org.nd4j.linalg.api.ndarray.INDArray;
@@ -65,9 +71,13 @@ public class LFWLoader extends BaseImageLoader implements Serializable {
     public String localSubDir = "lfw-a/lfw";
     protected File fullDir = new File(BASE_DIR, localDir);
     protected String regexPattern = ".[0-9]+";
+    protected PathLabelGenerator labelGenerator = new PatternPathLabelGenerator(regexPattern);
     protected boolean useSubset = false;
     protected int numExamples = NUM_IMAGES;
     protected int numLabels = NUM_LABELS;
+    protected int batchSize = 0;
+    protected double splitTrainTest = 1;
+    protected boolean train = true;
 
     public static Map<String, String> lfwData = new HashMap<>();
     public static Map<String, String> lfwLabel = new HashMap<>();
@@ -173,47 +183,63 @@ public class LFWLoader extends BaseImageLoader implements Serializable {
 
 
     public RecordReader getRecordReader() {
-        return getRecordReader(HEIGHT, WIDTH, CHANNELS, true, regexPattern);
-    }
-
-    public RecordReader getRecordReader(int height, int width, int channels) {
-        return getRecordReader(height, width,  channels, true, regexPattern);
+        return getRecordReader(HEIGHT, WIDTH, CHANNELS);
     }
 
     public RecordReader getRecordReader(int numExamples) {
         this.numExamples = numExamples;
-        return getRecordReader(HEIGHT, WIDTH, CHANNELS, true, regexPattern);
+        return getRecordReader(HEIGHT, WIDTH, CHANNELS);
     }
 
-    public RecordReader getRecordReader(int numExamples, int numCategories) {
+    public RecordReader getRecordReader(int numExamples, int batchSize, boolean train) {
         this.numExamples = numExamples;
-        this.numLabels = numCategories;
-        return getRecordReader(HEIGHT, WIDTH, CHANNELS, true, regexPattern);
+        this.batchSize = batchSize;
+        this.train = train;
+        return getRecordReader(HEIGHT, WIDTH, CHANNELS);
     }
 
-    public RecordReader getRecordReader(int numExamples, int height, int width, int channels) {
-        this.numExamples = numExamples;
-        return getRecordReader(height, width, channels, true, regexPattern);
-    }
-
-    public RecordReader getRecordReader(int numExamples, int height, int width, int channels, Random rng) {
+    public RecordReader getRecordReader(int numExamples, int batchSize, int height, int width, int channels, boolean train, Random rng) {
         this.numExamples = numExamples;
         this.rng = rng;
-        return getRecordReader(height, width, channels, true, regexPattern);
+        this.batchSize = batchSize;
+        this.train = train;
+        return getRecordReader(height, width, channels);
     }
 
-    public RecordReader getRecordReader(int numExamples, int height, int width, int channels, int numLabels, Random rng) {
+
+    public RecordReader getRecordReader(int numExamples, int batchSize, int height, int width, int channels, PathLabelGenerator labelGenerator, boolean train, Random rng) {
+        this.numExamples = numExamples;
+        this.rng = rng;
+        this.batchSize = batchSize;
+        this.labelGenerator = labelGenerator;
+        this.train = train;
+        return getRecordReader(height, width, channels);
+    }
+
+    public RecordReader getRecordReader(int numExamples, int batchSize, int height, int width, int channels,
+                                        int numLabels, PathLabelGenerator labelGenerator,
+                                         double splitTrainTest, boolean train, Random rng) {
         this.numExamples = numExamples;
         this.numLabels = numLabels;
         this.rng = rng;
-        return getRecordReader(height, width, channels,  true, regexPattern);
+        this.labelGenerator = labelGenerator;
+        this.batchSize = batchSize;
+        this.splitTrainTest = splitTrainTest;
+        this.train = train;
+        return getRecordReader(height, width, channels);
     }
 
-    public RecordReader getRecordReader(int height, int width, int channels, boolean appendLabel, String regexPattern) {
+    public RecordReader getRecordReader(int height, int width, int channels) {
+        // TODO add image scaling flexibility for iterator
         if (!imageFilesExist()) load();
-        RecordReader recordReader = new ImageRecordReader(height, width, channels, appendLabel, regexPattern);
+        RecordReader recordReader = new ImageRecordReader(height, width, channels, labelGenerator);
+        FileSplit fileSplit = new FileSplit(fullDir, BaseImageLoader.ALLOWED_FORMATS, rng);
+        BalancedPathFilter pathFilter = new BalancedPathFilter(rng, BaseImageLoader.ALLOWED_FORMATS, labelGenerator, numExamples, numLabels, 0, batchSize);
+        InputSplit[] inputSplit = fileSplit.sample(pathFilter, numExamples*splitTrainTest, numExamples*(1-splitTrainTest));
+
         try {
-            recordReader.initialize(new LimitFileSplit(fullDir, ALLOWED_FORMATS, numExamples, numLabels, regexPattern, rng));
+            InputSplit data = train? inputSplit[0]: inputSplit[1];
+            recordReader.initialize(data);
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();
         }
