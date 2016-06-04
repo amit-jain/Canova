@@ -362,6 +362,9 @@ public abstract class BaseImageRecordReader implements RecordReader {
 
     @Override
     public Collection<Writable> record(URI uri, DataInputStream dataInputStream ) throws IOException {
+        if (imageLoader == null) {
+            imageLoader = new NativeImageLoader(height, width, channels, imageTransform);
+        }
         INDArray row = imageLoader.asRowVector(dataInputStream);
         Collection<Writable> ret = RecordConverter.toRecord(row);
         if(appendLabel) ret.add(new DoubleWritable(labels.indexOf(getLabel(uri.getPath()))));
