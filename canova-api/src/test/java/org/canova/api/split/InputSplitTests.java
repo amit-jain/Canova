@@ -77,8 +77,8 @@ public class InputSplitTests {
         PatternPathLabelGenerator patternPathLabelGenerator = new PatternPathLabelGenerator("_", 0);
         RandomPathFilter randomPathFilter = new RandomPathFilter(random, extensions);
         RandomPathFilter randomPathFilter2 = new RandomPathFilter(random, extensions, 7);
-        BalancedPathFilter balancedPathFilter = new BalancedPathFilter(random, extensions, parentPathLabelGenerator, 0, 4, 1);
-        BalancedPathFilter balancedPathFilter2 = new BalancedPathFilter(random, extensions, patternPathLabelGenerator, 0, 4, 1);
+        BalancedPathFilter balancedPathFilter = new BalancedPathFilter(random, extensions, parentPathLabelGenerator, 0, 4, 0, 1);
+        BalancedPathFilter balancedPathFilter2 = new BalancedPathFilter(random, extensions, patternPathLabelGenerator, 0, 4, 0, 1);
 
         InputSplit[] samples = split.sample(randomPathFilter);
         assertEquals(1, samples.length);

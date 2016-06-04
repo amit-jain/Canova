@@ -23,6 +23,7 @@ package org.canova.image.recordreader;
 
 import java.io.File;
 import java.util.*;
+import org.canova.api.io.labels.PathLabelGenerator;
 
 /**
  * Image record reader.
@@ -37,62 +38,75 @@ import java.util.*;
 public class ImageRecordReader extends BaseImageRecordReader {
 
 
-    /** Loads images with height = 28, width = 28, and channels = 1, with no labels. */
+    /** Loads images with height = 28, width = 28, and channels = 1, appending no labels. */
     public ImageRecordReader() {
         super();
     }
 
-    /** Loads images with given height, width, channels, and labels. */
+    /** Loads images with given height, width, channels, and labels, but not appending them. */
+    @Deprecated
     public ImageRecordReader(int height, int width, int channels, List<String> labels) {
         super(height, width, channels,labels);
     }
 
     /** Loads images with given height, width, channels, and labels, possibly appending them to the output. */
+    @Deprecated
     public ImageRecordReader(int height, int width, int channels, boolean appendLabel, List<String> labels) {
         super(height, width, channels,appendLabel, labels);
     }
 
-    /** Loads images with given height, width, and channels, with no labels. */
+    /** Loads images with given height, width, and channels, appending labels returned by the generator. */
+    public ImageRecordReader(int height, int width, int channels, PathLabelGenerator labelGenerator) {
+        super(height, width, channels, labelGenerator);
+    }
+
+    /** Loads images with given height, width, and channels, appending no labels. */
     public ImageRecordReader(int height, int width, int channels) {
         super(height, width, channels,false);
     }
 
     /** Loads images with given height, width, and channels, possibly appending labels derived from the directory. */
+    @Deprecated
     public ImageRecordReader(int height, int width, int channels, boolean appendLabel) {
         super(height, width, channels,appendLabel);
     }
 
-    /** Loads images with given height, width, channels = 1, and labels. */
+    /** Loads images with given height, width, channels = 1, and labels, but not appending them. */
+    @Deprecated
     public ImageRecordReader(int height, int width,  List<String> labels) {
         super(height, width,  1, labels);
     }
 
     /** Loads images with given height, width, channels = 1, and labels, possibly appending them to the output. */
+    @Deprecated
     public ImageRecordReader(int height, int width,  boolean appendLabel, List<String> labels) {
         super(height, width,  1, appendLabel, labels);
     }
 
-    /** Loads images with given height, width, and channels = 1, with no labels. */
+    /** Loads images with given height, width, and channels, appending labels returned by the generator. */
+    public ImageRecordReader(int height, int width, PathLabelGenerator labelGenerator) {
+        super(height, width, 1, labelGenerator);
+    }
+
+    /** Loads images with given height, width, and channels = 1, appending no labels. */
     public ImageRecordReader(int height, int width) {
         super(height, width,  1, false);
     }
 
     /** Loads images with given height, width, and channels = 1, possibly appending labels derived from the directory. */
+    @Deprecated
     public ImageRecordReader(int height, int width, boolean appendLabel) {
         super(height, width, 1, appendLabel);
     }
 
 
     /** Loads images with given height, width, and channels, possibly appending labels derived from the directory. */
+    @Deprecated
     public ImageRecordReader(int height, int width, int channels, boolean appendLabel, String pattern) {
         super(height, width, channels, appendLabel, pattern, 0);
     }
 
 
-    @Override
-    public String getLabel(String path) {
-        return new File(path).getParentFile().getName();
-    }
 
 
 }

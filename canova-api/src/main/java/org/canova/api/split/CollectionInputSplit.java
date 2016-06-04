@@ -11,22 +11,20 @@ import java.util.Collection;
  *
  * @author Alex Black
  */
-public class CollectionInputSplit implements InputSplit {
-
-    private URI[] uris;
+public class CollectionInputSplit extends BaseInputSplit {
 
     public CollectionInputSplit(Collection<URI> list){
-        this.uris = list.toArray(new URI[list.size()]);
+        this.locations = list.toArray(new URI[list.size()]);
     }
 
     @Override
     public long length() {
-        return uris.length;
+        return locations.length;
     }
 
     @Override
     public URI[] locations() {
-        return uris;
+        return locations;
     }
 
     @Override
