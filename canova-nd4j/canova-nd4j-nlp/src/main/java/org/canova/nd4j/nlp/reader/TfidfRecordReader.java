@@ -90,8 +90,12 @@ public class TfidfRecordReader extends FileRecordReader  {
             //and pass it to the already existing vectorizer.
             while(hasNext()) {
                 Collection<Writable> fileContents = next();
+                if(appendLabel)
+                    recordLabels.add(new IntWritable(getCurrentLabel()).toInt());
                 records.add(RecordConverter.toRecord(tfidfVectorizer.transform(fileContents)));
             }
+            
+            labelIter = recordLabels.iterator();
             recordIter = records.iterator();
         }
 
