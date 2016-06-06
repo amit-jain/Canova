@@ -23,13 +23,10 @@ package org.canova.image.recordreader;
 import org.apache.commons.io.FileUtils;
 import org.canova.api.conf.Configuration;
 import org.canova.api.io.data.DoubleWritable;
-import org.canova.api.io.data.Text;
 import org.canova.api.io.labels.PathLabelGenerator;
 import org.canova.api.records.reader.RecordReader;
-import org.canova.api.split.BaseInputSplit;
 import org.canova.api.split.FileSplit;
 import org.canova.api.split.InputSplit;
-import org.canova.api.split.InputStreamInputSplit;
 import org.canova.api.writable.Writable;
 import org.canova.common.RecordConverter;
 import org.canova.image.loader.BaseImageLoader;
@@ -41,10 +38,7 @@ import org.nd4j.linalg.api.ndarray.INDArray;
 import java.io.DataInputStream;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URI;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.*;
 
 /**
@@ -57,7 +51,7 @@ public abstract class BaseImageRecordReader implements RecordReader {
     protected Configuration conf;
     protected File currentFile;
     protected PathLabelGenerator labelGenerator = null;
-    protected List<String> labels  = new ArrayList<>();
+    protected List<String> labels = new ArrayList<>();
     protected boolean appendLabel = false;
     protected Collection<Writable> record;
     protected boolean hitImage = false;
@@ -66,7 +60,7 @@ public abstract class BaseImageRecordReader implements RecordReader {
     protected ImageTransform imageTransform;
     protected BaseImageLoader imageLoader;
     protected InputSplit inputSplit;
-    protected Map<String,String> fileNameMap = new LinkedHashMap<>();
+    protected Map<String, String> fileNameMap = new LinkedHashMap<>();
     protected String pattern; // Pattern to split and segment file name, pass in regex
     protected int patternPosition = 0;
 
@@ -123,102 +117,71 @@ public abstract class BaseImageRecordReader implements RecordReader {
     }
 
     protected boolean containsFormat(String format) {
-        for(String format2 : imageLoader.getAllowedFormats())
-            if(format.endsWith("." + format2))
+        for (String format2 : imageLoader.getAllowedFormats())
+            if (format.endsWith("." + format2))
                 return true;
         return false;
     }
 
 
     @Override
-    public void initialize(InputSplit split) throws IOException{
+    public void initialize(InputSplit split) throws IOException {
         if (imageLoader == null) {
             imageLoader = new NativeImageLoader(height, width, channels, imageTransform);
         }
-            inputSplit = split;
-            if(split instanceof BaseInputSplit) {
-                Collection<File> allFiles;
-                URI[] locations = split.locations();
-                if(locations != null && locations.length >= 1) {
-                    if(locations.length > 1) {
-                        allFiles = new ArrayList<>();
-                        for(URI location : locations) {
-                            File imgFile = new File(location);
-                            if(!imgFile.isDirectory() && containsFormat(imgFile.getAbsolutePath()))
-                                allFiles.add(imgFile);
-                            if(appendLabel){
-                                File parentDir = imgFile.getParentFile();
-                                String name = parentDir.getName();
-                                if (labelGenerator != null) {
-                                    name = labelGenerator.getLabelForPath(location).toString();
-                                }
-                                if(!labels.contains(name))
-                                    labels.add(name);
-                                if(pattern != null) {
-                                    String label = name.split(pattern)[patternPosition];
-                                    fileNameMap.put(imgFile.toString(), label);
-                                }
-                            }
-                        }
-                    } else {
-                        File curr = new File(locations[0]);
-                        if(!curr.exists())
-                            throw new IllegalArgumentException("Path " + curr.getAbsolutePath() + " does not exist!");
-                        if(curr.isDirectory()) {
-                            allFiles = FileUtils.listFiles(curr, null, true);
-                        } else {
-                            allFiles = Collections.singletonList(curr);
-                        }
-
-                    }
-                    iter = allFiles.iterator();
-                }
-                if (split instanceof FileSplit) {
-                    //remove the root directory
-                    FileSplit split1 = (FileSplit) split;
-                    labels.remove(split1.getRootDir());
-                }
-            }
-
-
-            else if(split instanceof InputStreamInputSplit) {
-                InputStreamInputSplit split2 = (InputStreamInputSplit) split;
-                InputStream is = split2.getIs();
-                URI[] locations = split2.locations();
-                INDArray load = imageLoader.asRowVector(is);
-                record = RecordConverter.toRecord(load);
-                for (int i = 0; i < load.length(); i++) {
+        inputSplit = split;
+        Collection<File> allFiles;
+        URI[] locations = split.locations();
+        if (locations != null && locations.length >= 1) {
+            if (locations.length > 1) {
+                allFiles = new ArrayList<>();
+                for (URI location : locations) {
+                    File imgFile = new File(location);
+                    if (!imgFile.isDirectory() && containsFormat(imgFile.getAbsolutePath()))
+                        allFiles.add(imgFile);
                     if (appendLabel) {
-                        Path path = Paths.get(locations[0]);
-                        String parent = path.getParent().toString();
-                        //could have been a uri
-                        if (parent.contains("/")) {
-                            parent = parent.substring(parent.lastIndexOf('/') + 1);
-                        }
+                        File parentDir = imgFile.getParentFile();
+                        String name = parentDir.getName();
                         if (labelGenerator != null) {
-                            parent = labelGenerator.getLabelForPath(locations[0]).toString();
+                            name = labelGenerator.getLabelForPath(location).toString();
                         }
-                        int label = labels.indexOf(parent);
-                        if (label >= 0)
-                            record.add(new DoubleWritable(labels.indexOf(parent)));
-                        else
-                            throw new IllegalStateException("Illegal label " + parent);
+                        if (!labels.contains(name))
+                            labels.add(name);
+                        if (pattern != null) {
+                            String label = name.split(pattern)[patternPosition];
+                            fileNameMap.put(imgFile.toString(), label);
+                        }
                     }
                 }
-                is.close();
-            }
-    }
+            } else {
+                File curr = new File(locations[0]);
+                if (!curr.exists())
+                    throw new IllegalArgumentException("Path " + curr.getAbsolutePath() + " does not exist!");
+                if (curr.isDirectory()) {
+                    allFiles = FileUtils.listFiles(curr, null, true);
+                } else {
+                    allFiles = Collections.singletonList(curr);
+                }
 
+            }
+            iter = allFiles.iterator();
+        }
+        if (split instanceof FileSplit) {
+            //remove the root directory
+            FileSplit split1 = (FileSplit) split;
+            labels.remove(split1.getRootDir());
+        }
+    }
 
 
     @Override
     public void initialize(Configuration conf, InputSplit split) throws IOException, InterruptedException {
-        this.appendLabel = conf.getBoolean(APPEND_LABEL,false);
+        this.appendLabel = conf.getBoolean(APPEND_LABEL, false);
         this.labels = new ArrayList<>(conf.getStringCollection(LABELS));
-        this.height = conf.getInt(HEIGHT,height);
-        this.width = conf.getInt(WIDTH,width);
-        this.channels = conf.getInt(CHANNELS,channels);
-        this.cropImage = conf.getBoolean(CROP_IMAGE,cropImage);
+        this.height = conf.getInt(HEIGHT, height);
+        this.width = conf.getInt(WIDTH, width);
+        this.channels = conf.getInt(CHANNELS, channels);
+        this.cropImage = conf.getBoolean(CROP_IMAGE, cropImage);
         if ("imageio".equals(conf.get(IMAGE_LOADER))) {
             this.imageLoader = new ImageLoader(height, width, channels, cropImage);
         } else {
@@ -231,7 +194,8 @@ public abstract class BaseImageRecordReader implements RecordReader {
 
     /**
      * Called once at initialization.
-     * @param split the split that defines the range of records to read
+     *
+     * @param split          the split that defines the range of records to read
      * @param imageTransform the image transform to use to transform images while loading them
      * @throws java.io.IOException
      * @throws InterruptedException
@@ -244,8 +208,9 @@ public abstract class BaseImageRecordReader implements RecordReader {
 
     /**
      * Called once at initialization.
-     * @param conf a configuration for initialization
-     * @param split the split that defines the range of records to read
+     *
+     * @param conf           a configuration for initialization
+     * @param split          the split that defines the range of records to read
      * @param imageTransform the image transform to use to transform images while loading them
      * @throws java.io.IOException
      * @throws InterruptedException
@@ -259,24 +224,23 @@ public abstract class BaseImageRecordReader implements RecordReader {
 
     @Override
     public Collection<Writable> next() {
-        if(iter != null) {
+        if (iter != null) {
             Collection<Writable> ret = new ArrayList<>();
             File image = (File) iter.next();
             currentFile = image;
 
-            if(image.isDirectory())
+            if (image.isDirectory())
                 return next();
             try {
                 INDArray row = imageLoader.asRowVector(image);
                 ret = RecordConverter.toRecord(row);
-                if(appendLabel)
+                if (appendLabel)
                     ret.add(new DoubleWritable(labels.indexOf(getLabel(image.getPath()))));
             } catch (Exception e) {
                 e.printStackTrace();
             }
             return ret;
-        }
-        else if(record != null) {
+        } else if (record != null) {
             hitImage = true;
             return record;
         }
@@ -285,10 +249,9 @@ public abstract class BaseImageRecordReader implements RecordReader {
 
     @Override
     public boolean hasNext() {
-        if(iter != null) {
+        if (iter != null) {
             return iter.hasNext();
-        }
-        else if(record != null) {
+        } else if (record != null) {
             return !hitImage;
         }
         throw new IllegalStateException("Indeterminant state: record must not be null, or a file iterator must exist");
@@ -312,6 +275,7 @@ public abstract class BaseImageRecordReader implements RecordReader {
 
     /**
      * Get the label from the given path
+     *
      * @param path the path to get the label from
      * @return the label for the given path
      */
@@ -319,55 +283,65 @@ public abstract class BaseImageRecordReader implements RecordReader {
         if (labelGenerator != null) {
             return labelGenerator.getLabelForPath(path).toString();
         }
-        if(fileNameMap != null && fileNameMap.containsKey(path)) return fileNameMap.get(path);
+        if (fileNameMap != null && fileNameMap.containsKey(path)) return fileNameMap.get(path);
         return (new File(path)).getParentFile().getName();
     }
 
     /**
      * Accumulate the label from the path
+     *
      * @param path the path to get the label from
      */
     protected void accumulateLabel(String path) {
         String name = getLabel(path);
-        if(!labels.contains(name))
+        if (!labels.contains(name))
             labels.add(name);
     }
 
-    /** Returns the file loaded last by {@link #next()}. */
+    /**
+     * Returns the file loaded last by {@link #next()}.
+     */
     public File getCurrentFile() {
         return currentFile;
     }
 
-    /** Sets manually the file returned by {@link #getCurrentFile()}. */
+    /**
+     * Sets manually the file returned by {@link #getCurrentFile()}.
+     */
     public void setCurrentFile(File currentFile) {
         this.currentFile = currentFile;
     }
 
     @Override
-    public List<String> getLabels(){
-        return labels; }
+    public List<String> getLabels() {
+        return labels;
+    }
 
     @Override
     public void reset() {
-        if(inputSplit == null) throw new UnsupportedOperationException("Cannot reset without first initializing");
-        try{
+        if (inputSplit == null) throw new UnsupportedOperationException("Cannot reset without first initializing");
+        try {
             initialize(inputSplit);
-        }catch(Exception e){
-            throw new RuntimeException("Error during LineRecordReader reset",e);
+        } catch (Exception e) {
+            throw new RuntimeException("Error during LineRecordReader reset", e);
         }
     }
 
-    /** Returns {@code getLabels().size()}. */
-    public int numLabels() { return labels.size(); }
+    /**
+     * Returns {@code getLabels().size()}.
+     */
+    public int numLabels() {
+        return labels.size();
+    }
 
     @Override
-    public Collection<Writable> record(URI uri, DataInputStream dataInputStream ) throws IOException {
+    public Collection<Writable> record(URI uri, DataInputStream dataInputStream) throws IOException {
         if (imageLoader == null) {
             imageLoader = new NativeImageLoader(height, width, channels, imageTransform);
         }
         INDArray row = imageLoader.asRowVector(dataInputStream);
         Collection<Writable> ret = RecordConverter.toRecord(row);
-        if(appendLabel) ret.add(new DoubleWritable(labels.indexOf(getLabel(uri.getPath()))));
+        if (appendLabel) ret.add(new DoubleWritable(labels.indexOf(getLabel(uri.getPath()))));
         return ret;
     }
 
