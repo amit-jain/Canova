@@ -23,6 +23,8 @@ package org.canova.api.split;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
+
 import org.canova.api.io.filters.PathFilter;
 
 /**
@@ -93,7 +95,7 @@ public abstract class BaseInputSplit implements InputSplit {
             partitions[weights.length] = paths.length;
 
             for (int i = 0; i < weights.length; i++) {
-                ArrayList<URI> uris = new ArrayList<URI>();
+                List<URI> uris = new ArrayList<>();
                 for (int j = partitions[i]; j < partitions[i + 1]; j++) {
                     uris.add(paths[j]);
                 }
