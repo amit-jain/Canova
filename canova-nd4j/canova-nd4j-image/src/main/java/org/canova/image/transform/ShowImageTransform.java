@@ -25,36 +25,50 @@ import org.canova.image.data.ImageWritable;
 
 /**
  * Shows images on the screen, does not actually transform them.
+ * To continue to the next image, press any key in the window of the CanvasFrame.
  *
  * @author saudet
  */
 public class ShowImageTransform extends BaseImageTransform {
 
     CanvasFrame canvas;
+    int delay;
 
     /**
      * Constructs an instance of the ImageTransform from a {@link CanvasFrame}.
      *
      * @param canvas to display images in
+     * @param delay  max time to wait in milliseconds (0 == infinity, negative == no wait)
      */
-    public ShowImageTransform(CanvasFrame canvas) {
+    public ShowImageTransform(CanvasFrame canvas, int delay) {
         super(null);
         this.canvas = canvas;
+        this.delay = delay;
     }
 
     /**
      * Constructs an instance of the ImageTransform with a new {@link CanvasFrame}.
      *
      * @param title of the new CanvasFrame to display images in
+     * @param delay max time to wait in milliseconds (0 == infinity, negative == no wait)
      */
-    public ShowImageTransform(String title) {
+    public ShowImageTransform(String title, int delay) {
         super(null);
-        canvas = new CanvasFrame(title);
+        this.canvas = new CanvasFrame(title);
+        this.delay = delay;
     }
 
     @Override
     public ImageWritable transform(ImageWritable image, Random random) {
         canvas.showImage(image.getFrame());
+        if (delay >= 0) {
+            try {
+                canvas.waitKey(delay);
+            } catch (InterruptedException ex) {
+                // reset interrupt to be nice
+                Thread.currentThread().interrupt();
+            }
+        }
         return image;
     }
 }
