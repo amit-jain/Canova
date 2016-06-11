@@ -24,6 +24,7 @@ import org.apache.commons.io.FileUtils;
 import org.canova.api.conf.Configuration;
 import org.canova.api.io.data.DoubleWritable;
 import org.canova.api.io.data.Text;
+import org.canova.api.records.reader.BaseRecordReader;
 import org.canova.api.records.reader.SequenceRecordReader;
 import org.canova.api.split.FileSplit;
 import org.canova.api.split.InputSplit;
@@ -53,7 +54,7 @@ import java.util.*;
  * @author Adam Gibson
  *
  */
-public class VideoRecordReader implements SequenceRecordReader {
+public class VideoRecordReader extends BaseRecordReader implements SequenceRecordReader {
     private Iterator<File> iter;
     private int height = 28, width = 28;
     private BaseImageLoader imageLoader;
@@ -214,6 +215,7 @@ public class VideoRecordReader implements SequenceRecordReader {
             if(image.isDirectory() || !containsFormat(image.getAbsolutePath()))
                 return next();
             try {
+                invokeListeners(image);
                 INDArray row = imageLoader.asRowVector(image);
                 for(int i = 0; i < row.length(); i++)
                     ret.add(new DoubleWritable(row.getDouble(i)));
@@ -241,6 +243,7 @@ public class VideoRecordReader implements SequenceRecordReader {
 
         else if(record != null) {
             hitImage = true;
+            invokeListeners(record);
             return record;
         }
 
@@ -268,6 +271,7 @@ public class VideoRecordReader implements SequenceRecordReader {
     @Override
     public Collection<Collection<Writable>> sequenceRecord() {
         File next = iter.next();
+        invokeListeners(next);
         if(!next.isDirectory())
             return Collections.emptyList();
         File[] list = next.listFiles();

@@ -22,7 +22,7 @@ package org.canova.api.records.reader.impl;
 
 
 import org.canova.api.conf.Configuration;
-import org.canova.api.records.reader.RecordReader;
+import org.canova.api.records.reader.BaseRecordReader;
 import org.canova.api.records.reader.SequenceRecordReader;
 import org.canova.api.split.InputSplit;
 import org.canova.api.writable.Writable;
@@ -40,7 +40,7 @@ import java.util.List;
  *
  * @author Alex Black
  */
-public class CollectionSequenceRecordReader implements SequenceRecordReader {
+public class CollectionSequenceRecordReader extends BaseRecordReader implements SequenceRecordReader {
     private Iterator<? extends Collection<? extends Collection<Writable>>> records;
     private final Collection<? extends Collection<? extends Collection<Writable>>> original;
 
@@ -108,7 +108,9 @@ public class CollectionSequenceRecordReader implements SequenceRecordReader {
     @Override
     @SuppressWarnings("unchecked")
     public Collection<Collection<Writable>> sequenceRecord() {
-        return (Collection<Collection<Writable>>) records.next();
+        Collection<Collection<Writable>> record = (Collection<Collection<Writable>>)records.next();
+        invokeListeners(record);
+        return record;
     }
 
     @Override

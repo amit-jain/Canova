@@ -2,7 +2,7 @@ package org.canova.api.records.reader.impl;
 
 import org.canova.api.conf.Configuration;
 import org.canova.api.io.data.Text;
-import org.canova.api.records.reader.RecordReader;
+import org.canova.api.records.reader.BaseRecordReader;
 import org.canova.api.split.InputSplit;
 import org.canova.api.split.ListStringSplit;
 import org.canova.api.writable.Writable;
@@ -21,7 +21,7 @@ import java.util.List;
  *
  * @author Adam Gibson
  */
-public class ListStringRecordReader implements RecordReader {
+public class ListStringRecordReader extends BaseRecordReader {
     private List<List<String>> delimitedData;
     private Iterator<List<String>> dataIter;
     private Configuration conf;
@@ -65,6 +65,7 @@ public class ListStringRecordReader implements RecordReader {
     @Override
     public Collection<Writable> next() {
         List<String> next = dataIter.next();
+        invokeListeners(next);
         List<Writable> ret = new ArrayList<>();
         for(String s : next)
             ret.add(new Text(s));
