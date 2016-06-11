@@ -23,6 +23,7 @@ package org.canova.common;
 import org.canova.api.writable.Writable;
 import org.canova.common.data.NDArrayWritable;
 import org.nd4j.linalg.api.ndarray.INDArray;
+import org.nd4j.linalg.factory.Nd4j;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -33,6 +34,33 @@ import java.util.Iterator;
  */
 public class RecordConverter {
     private RecordConverter() {}
+    /**
+     * Convert a record to an ndarray
+     * @param record the record to convert
+     *
+     * @return the array
+     */
+    public static INDArray toArray(Collection<Writable> record,int size) {
+        Iterator<Writable> writables = record.iterator();
+        Writable firstWritable = writables.next();
+        if(firstWritable instanceof NDArrayWritable) {
+            NDArrayWritable ret = (NDArrayWritable) firstWritable;
+            return ret.get();
+        }
+        else {
+            INDArray vector = Nd4j.create(size);
+            vector.putScalar(0,firstWritable.toDouble());
+            int count = 1;
+            while(writables.hasNext()) {
+                Writable w = writables.next();
+                vector.putScalar(count++,w.toDouble());
+            }
+
+            return vector;
+        }
+
+
+    }
 
     /**
      * Convert a record to an ndarray
@@ -40,15 +68,11 @@ public class RecordConverter {
      * @return the array
      */
     public static INDArray toArray(Collection<Writable> record) {
-        Iterator<Writable> writables = record.iterator();
-        while(writables.hasNext()) {
-            Writable w = writables.next();
-            if (w instanceof NDArrayWritable) {
-                return ((NDArrayWritable)w).get();
-            }
-        }
-        return null;
+       return toArray(record,record.size());
     }
+
+
+
     /**
      * Convert an ndarray to a record
      * @param array the array to convert
