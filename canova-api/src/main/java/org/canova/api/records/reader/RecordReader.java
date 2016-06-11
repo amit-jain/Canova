@@ -22,6 +22,7 @@ package org.canova.api.records.reader;
 
 import org.canova.api.conf.Configurable;
 import org.canova.api.conf.Configuration;
+import org.canova.api.records.listener.RecordListener;
 import org.canova.api.split.InputSplit;
 import org.canova.api.writable.Writable;
 
@@ -94,4 +95,17 @@ public interface RecordReader extends Closeable,Serializable,Configurable {
      */
     Collection<Writable> record(URI uri, DataInputStream dataInputStream) throws IOException;
 
+    /**
+     * Get the record listeners for this record reader.
+     */
+    Collection<RecordListener> getListeners();
+
+    /**
+     * Set the record listeners for this record reader.
+     */
+    void setListeners(RecordListener...listeners);
+    /**
+     * Set the record listeners for this record reader.
+     */
+    void setListeners(Collection<RecordListener> listeners);
 }

@@ -24,7 +24,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.canova.api.conf.Configuration;
 import org.canova.api.io.data.Text;
-import org.canova.api.records.reader.RecordReader;
+import org.canova.api.records.reader.BaseRecordReader;
 import org.canova.api.split.InputSplit;
 import org.canova.api.writable.Writable;
 
@@ -38,7 +38,7 @@ import java.util.*;
  *
  * @author Adam Gibson
  */
-public class FileRecordReader implements RecordReader {
+public class FileRecordReader extends BaseRecordReader {
 
     protected Iterator<File> iter;
     protected Configuration conf;
@@ -112,6 +112,7 @@ public class FileRecordReader implements RecordReader {
         try {
             File next = iter.next();
             this.currentFile = next;
+            invokeListeners(next);
             ret.add(new Text(FileUtils.readFileToString(next)));
         } catch (IOException e) {
             e.printStackTrace();
@@ -124,6 +125,7 @@ public class FileRecordReader implements RecordReader {
                 try {
                     File next = iter.next();
                     this.currentFile = next;
+                    invokeListeners(next);
                     ret.add(new Text(FileUtils.readFileToString(next)));
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -185,6 +187,7 @@ public class FileRecordReader implements RecordReader {
 
     @Override
     public Collection<Writable> record(URI uri, DataInputStream dataInputStream) throws IOException {
+        invokeListeners(uri);
         //Here: reading the entire file to a Text writable
         BufferedReader br = new BufferedReader(new InputStreamReader(dataInputStream));
         StringBuilder sb = new StringBuilder();

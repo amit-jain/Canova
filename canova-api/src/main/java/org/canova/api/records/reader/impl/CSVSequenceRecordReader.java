@@ -38,6 +38,7 @@ public class CSVSequenceRecordReader extends FileRecordReader implements Sequenc
 
     @Override
     public Collection<Collection<Writable>> sequenceRecord(URI uri, DataInputStream dataInputStream) throws IOException {
+        invokeListeners(uri);
         @SuppressWarnings("unchecked")
         Iterator<String> lineIter = IOUtils.lineIterator(new InputStreamReader(dataInputStream));
         if (skipNumLines > 0) {
@@ -61,6 +62,7 @@ public class CSVSequenceRecordReader extends FileRecordReader implements Sequenc
     @SuppressWarnings("unchecked")
     public Collection<Collection<Writable>> sequenceRecord() {
         File next = iter.next();
+        invokeListeners(next);
 
         Iterator<String> lineIter;
         try {

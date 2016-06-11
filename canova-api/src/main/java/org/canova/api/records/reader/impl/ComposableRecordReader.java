@@ -21,6 +21,7 @@
 package org.canova.api.records.reader.impl;
 
 import org.canova.api.conf.Configuration;
+import org.canova.api.records.reader.BaseRecordReader;
 import org.canova.api.records.reader.RecordReader;
 import org.canova.api.split.InputSplit;
 import org.canova.api.writable.Writable;
@@ -40,7 +41,7 @@ RecordReader for each pipeline. Individual record is a concatenation of the two 
         concatenation would be next & addAll on the collection
         return one record
  */
-public class ComposableRecordReader implements RecordReader {
+public class ComposableRecordReader extends BaseRecordReader {
 
     private RecordReader[] readers;
 
@@ -66,6 +67,7 @@ public class ComposableRecordReader implements RecordReader {
                 ret.addAll(reader.next());
             }
         }
+        invokeListeners(ret);
         return ret;
     }
 
