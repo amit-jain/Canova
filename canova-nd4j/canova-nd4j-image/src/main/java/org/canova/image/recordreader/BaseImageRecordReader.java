@@ -78,7 +78,7 @@ public abstract class BaseImageRecordReader implements RecordReader {
         this.width = width;
         this.channels = channels;
         this.labelGenerator = labelGenerator;
-        this.appendLabel = true;
+        this.appendLabel = labelGenerator !=null? true: false;
     }
 
     @Deprecated
