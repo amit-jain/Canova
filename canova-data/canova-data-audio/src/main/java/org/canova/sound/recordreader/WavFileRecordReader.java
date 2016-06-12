@@ -23,7 +23,7 @@ package org.canova.sound.recordreader;
 import org.apache.commons.io.FileUtils;
 import org.canova.api.conf.Configuration;
 import org.canova.api.io.data.DoubleWritable;
-import org.canova.api.records.reader.RecordReader;
+import org.canova.api.records.reader.BaseRecordReader;
 import org.canova.api.split.FileSplit;
 import org.canova.api.split.InputSplit;
 import org.canova.api.split.InputStreamInputSplit;
@@ -44,7 +44,7 @@ import java.util.*;
  * Wav file loader
  * @author Adam Gibson
  */
-public class WavFileRecordReader implements RecordReader {
+public class WavFileRecordReader extends BaseRecordReader {
     private Iterator<File> iter;
     private Collection<Writable> record;
     private boolean hitImage = false;
@@ -130,6 +130,7 @@ public class WavFileRecordReader implements RecordReader {
     public Collection<Writable> next() {
         if(iter != null) {
             File next = iter.next();
+            invokeListeners(next);
             Wave wave = new Wave(next.getAbsolutePath());
             return RecordUtils.toRecord(wave.getNormalizedAmplitudes());
         }
@@ -186,6 +187,7 @@ public class WavFileRecordReader implements RecordReader {
 
     @Override
     public Collection<Writable> record(URI uri, DataInputStream dataInputStream) throws IOException {
+        invokeListeners(uri);
         Wave wave = new Wave(dataInputStream);
         return RecordUtils.toRecord(wave.getNormalizedAmplitudes());
     }

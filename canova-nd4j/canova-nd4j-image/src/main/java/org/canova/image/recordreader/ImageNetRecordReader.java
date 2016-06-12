@@ -138,6 +138,7 @@ public class ImageNetRecordReader extends BaseImageRecordReader {
                 return next();
 
             try {
+                invokeListeners(image);
                 return load(imageLoader.asRowVector(image), image.getName());
             } catch (Exception e) {
                 e.printStackTrace();
@@ -150,7 +151,9 @@ public class ImageNetRecordReader extends BaseImageRecordReader {
             else {
                 if(iter.hasNext()) {
                     try {
-                        ret.add(new Text(FileUtils.readFileToString((File) iter.next())));
+                        image = iter.next();
+                        invokeListeners(image);
+                        ret.add(new Text(FileUtils.readFileToString(image)));
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -160,6 +163,7 @@ public class ImageNetRecordReader extends BaseImageRecordReader {
         }
         else if(record != null) {
             hitImage = true;
+            invokeListeners(record);
             return record;
         }
         throw new IllegalStateException("No more elements");
@@ -184,6 +188,7 @@ public class ImageNetRecordReader extends BaseImageRecordReader {
 
     @Override
     public Collection<Writable> record(URI uri, DataInputStream dataInputStream ) throws IOException {
+        invokeListeners(uri);
         imgNetLabelSetup();
         return load(imageLoader.asRowVector(dataInputStream), FilenameUtils.getName(uri.getPath()));
     }

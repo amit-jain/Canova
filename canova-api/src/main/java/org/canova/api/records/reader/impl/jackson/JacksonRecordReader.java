@@ -6,7 +6,7 @@ import org.apache.commons.io.FileUtils;
 import org.canova.api.conf.Configuration;
 import org.canova.api.io.data.Text;
 import org.canova.api.io.labels.PathLabelGenerator;
-import org.canova.api.records.reader.RecordReader;
+import org.canova.api.records.reader.BaseRecordReader;
 import org.canova.api.split.FileSplit;
 import org.canova.api.split.InputSplit;
 import org.canova.api.writable.Writable;
@@ -38,7 +38,7 @@ import java.util.*;
  *
  * @author Alex Black
  */
-public class JacksonRecordReader implements RecordReader {
+public class JacksonRecordReader extends BaseRecordReader {
 
     private static final TypeReference<Map<String,Object>> typeRef = new TypeReference<Map<String, Object>>(){};
 
@@ -100,6 +100,7 @@ public class JacksonRecordReader implements RecordReader {
         if(!hasNext()) throw new NoSuchElementException("No next element");
 
         URI uri = uris[cursor++];
+        invokeListeners(uri);
         String fileAsString;
         try{
             fileAsString = FileUtils.readFileToString(new File(uri.toURL().getFile()));

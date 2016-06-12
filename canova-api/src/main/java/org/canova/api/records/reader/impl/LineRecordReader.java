@@ -24,7 +24,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.LineIterator;
 import org.canova.api.conf.Configuration;
 import org.canova.api.io.data.Text;
-import org.canova.api.records.reader.RecordReader;
+import org.canova.api.records.reader.BaseRecordReader;
 import org.canova.api.split.FileSplit;
 import org.canova.api.split.InputSplit;
 import org.canova.api.split.InputStreamInputSplit;
@@ -40,7 +40,7 @@ import java.util.*;
  *
  * @author Adam Gibson
  */
-public class LineRecordReader implements RecordReader {
+public class LineRecordReader extends BaseRecordReader {
 
 
     private Iterator<String> iter;
@@ -78,7 +78,9 @@ public class LineRecordReader implements RecordReader {
         List<Writable> ret = new ArrayList<>();
 
         if(iter.hasNext()) {
-            ret.add(new Text(iter.next()));
+            String record = iter.next();
+            invokeListeners(record);
+            ret.add(new Text(record));
             return ret;
         } else {
             if ( !(inputSplit instanceof StringSplit) && currIndex < locations.length-1 ) {
@@ -91,7 +93,9 @@ public class LineRecordReader implements RecordReader {
                 }
 
                 if(iter.hasNext()) {
-                    ret.add(new Text(iter.next()));
+                    String record = iter.next();
+                    invokeListeners(record);
+                    ret.add(new Text(record));
                     return ret;
                 }
             }
@@ -157,6 +161,7 @@ public class LineRecordReader implements RecordReader {
 
     @Override
     public Collection<Writable> record(URI uri, DataInputStream dataInputStream) throws IOException {
+        invokeListeners(uri);
         //Here: we are reading a single line from the DataInputStream
         BufferedReader br = new BufferedReader(new InputStreamReader(dataInputStream));
         String line = br.readLine();

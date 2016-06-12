@@ -5,7 +5,7 @@ import org.canova.api.split.InputSplit;
 import org.apache.commons.io.IOUtils;
 import org.canova.api.conf.Configuration;
 
-import org.canova.api.records.reader.RecordReader;
+import org.canova.api.records.reader.BaseRecordReader;
 
 import org.nd4j.linalg.factory.Nd4j;
 
@@ -55,7 +55,7 @@ import java.util.*;
  * @author Josh Patterson
  *
  */
-public class MNISTRecordReader implements RecordReader {
+public class MNISTRecordReader extends BaseRecordReader {
 
 	private static Logger log = LoggerFactory.getLogger(MNISTRecordReader.class);
 
@@ -160,6 +160,7 @@ public class MNISTRecordReader implements RecordReader {
     	}
     	
     	DataSet currentRecord = this.curr;
+        invokeListeners(currentRecord);
     	
         List<Writable> ret = new ArrayList<>();
         //try {

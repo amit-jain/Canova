@@ -24,7 +24,7 @@ import org.apache.commons.io.FileUtils;
 import org.canova.api.conf.Configuration;
 import org.canova.api.io.data.DoubleWritable;
 import org.canova.api.io.labels.PathLabelGenerator;
-import org.canova.api.records.reader.RecordReader;
+import org.canova.api.records.reader.BaseRecordReader;
 import org.canova.api.split.FileSplit;
 import org.canova.api.split.InputSplit;
 import org.canova.api.writable.Writable;
@@ -46,7 +46,7 @@ import java.util.*;
  *
  * @author Adam Gibson
  */
-public abstract class BaseImageRecordReader implements RecordReader {
+public abstract class BaseImageRecordReader extends BaseRecordReader {
     protected Iterator<File> iter;
     protected Configuration conf;
     protected File currentFile;
@@ -232,6 +232,7 @@ public abstract class BaseImageRecordReader implements RecordReader {
             if (image.isDirectory())
                 return next();
             try {
+                invokeListeners(image);
                 INDArray row = imageLoader.asRowVector(image);
                 ret = RecordConverter.toRecord(row);
                 if (appendLabel)
@@ -242,6 +243,7 @@ public abstract class BaseImageRecordReader implements RecordReader {
             return ret;
         } else if (record != null) {
             hitImage = true;
+            invokeListeners(record);
             return record;
         }
         throw new IllegalStateException("No more elements");
@@ -336,6 +338,7 @@ public abstract class BaseImageRecordReader implements RecordReader {
 
     @Override
     public Collection<Writable> record(URI uri, DataInputStream dataInputStream) throws IOException {
+        invokeListeners(uri);
         if (imageLoader == null) {
             imageLoader = new NativeImageLoader(height, width, channels, imageTransform);
         }
