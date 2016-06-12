@@ -62,7 +62,7 @@ public class ImageRecordReader extends BaseImageRecordReader {
 
     /** Loads images with given height, width, and channels, appending no labels. */
     public ImageRecordReader(int height, int width, int channels) {
-        super(height, width, channels,false);
+        super(height, width, channels, (PathLabelGenerator) null);
     }
 
     /** Loads images with given height, width, and channels, possibly appending labels derived from the directory. */
