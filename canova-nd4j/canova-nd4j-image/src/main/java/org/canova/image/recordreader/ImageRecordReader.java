@@ -24,6 +24,7 @@ package org.canova.image.recordreader;
 import java.io.File;
 import java.util.*;
 import org.canova.api.io.labels.PathLabelGenerator;
+import org.canova.image.transform.ImageTransform;
 
 /**
  * Image record reader.
@@ -65,6 +66,17 @@ public class ImageRecordReader extends BaseImageRecordReader {
         super(height, width, channels, (PathLabelGenerator) null);
     }
 
+    /** Loads images with given height, width, and channels, appending labels returned by the generator. */
+    public ImageRecordReader(int height, int width, int channels, PathLabelGenerator labelGenerator, ImageTransform imageTransform) {
+        super(height, width, channels, labelGenerator, imageTransform);
+    }
+
+    /** Loads images with given height, width, and channels, appending no labels. */
+    public ImageRecordReader(int height, int width, int channels, ImageTransform imageTransform) {
+        super(height, width, channels, null, imageTransform);
+    }
+
+
     /** Loads images with given height, width, and channels, possibly appending labels derived from the directory. */
     @Deprecated
     public ImageRecordReader(int height, int width, int channels, boolean appendLabel) {
@@ -90,7 +102,7 @@ public class ImageRecordReader extends BaseImageRecordReader {
 
     /** Loads images with given height, width, and channels = 1, appending no labels. */
     public ImageRecordReader(int height, int width) {
-        super(height, width,  1, false);
+        super(height, width,  1, null, null);
     }
 
     /** Loads images with given height, width, and channels = 1, possibly appending labels derived from the directory. */
