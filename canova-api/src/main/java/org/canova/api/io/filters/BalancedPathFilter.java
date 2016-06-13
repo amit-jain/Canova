@@ -57,6 +57,11 @@ public class BalancedPathFilter extends RandomPathFilter {
     }
 
     /** Calls {@code this(random, extensions, labelGenerator, 0, maxLabels, 0, maxPathsPerLabel)}. */
+    public BalancedPathFilter(Random random, PathLabelGenerator labelGenerator, int maxPaths, int maxLabels, int maxPathsPerLabel) {
+        this(random, null, labelGenerator, maxPaths, maxLabels, 0, maxPathsPerLabel);
+    }
+
+    /** Calls {@code this(random, extensions, labelGenerator, 0, maxLabels, 0, maxPathsPerLabel)}. */
     public BalancedPathFilter(Random random, String[] extensions, PathLabelGenerator labelGenerator, int maxLabels, int maxPathsPerLabel) {
         this(random, extensions, labelGenerator, 0, maxLabels, 0, maxPathsPerLabel);
     }
