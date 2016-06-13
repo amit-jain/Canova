@@ -74,12 +74,18 @@ public abstract class BaseImageRecordReader extends BaseRecordReader {
     }
 
     public BaseImageRecordReader(int height, int width, int channels, PathLabelGenerator labelGenerator) {
+        this(height, width, channels,labelGenerator, null);
+    }
+
+    public BaseImageRecordReader(int height, int width, int channels, PathLabelGenerator labelGenerator, ImageTransform imageTransform) {
         this.height = height;
         this.width = width;
         this.channels = channels;
         this.labelGenerator = labelGenerator;
+        this.imageTransform = imageTransform;
         this.appendLabel = labelGenerator !=null? true: false;
     }
+
 
     @Deprecated
     public BaseImageRecordReader(int height, int width, int channels, List<String> labels) {
