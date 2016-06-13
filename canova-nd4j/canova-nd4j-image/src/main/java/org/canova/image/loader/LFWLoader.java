@@ -191,34 +191,37 @@ public class LFWLoader extends BaseImageLoader implements Serializable {
         return getRecordReader(HEIGHT, WIDTH, CHANNELS);
     }
 
-    public RecordReader getRecordReader(int numExamples, int batchSize, boolean train) {
+    public RecordReader getRecordReader(int numExamples, int batchSize, boolean train, double splitTrainTest) {
         this.numExamples = numExamples;
         this.batchSize = batchSize;
         this.train = train;
+        this.splitTrainTest = splitTrainTest;
         return getRecordReader(HEIGHT, WIDTH, CHANNELS);
     }
 
-    public RecordReader getRecordReader(int numExamples, int batchSize, int height, int width, int channels, boolean train, Random rng) {
+    public RecordReader getRecordReader(int numExamples, int batchSize, int height, int width, int channels, boolean train, double splitTrainTest, Random rng) {
         this.numExamples = numExamples;
         this.rng = rng;
         this.batchSize = batchSize;
         this.train = train;
+        this.splitTrainTest = splitTrainTest;
         return getRecordReader(height, width, channels);
     }
 
 
-    public RecordReader getRecordReader(int numExamples, int batchSize, int height, int width, int channels, PathLabelGenerator labelGenerator, boolean train, Random rng) {
+    public RecordReader getRecordReader(int numExamples, int batchSize, int height, int width, int channels, PathLabelGenerator labelGenerator, boolean train, double splitTrainTest, Random rng) {
         this.numExamples = numExamples;
         this.rng = rng;
         this.batchSize = batchSize;
         this.labelGenerator = labelGenerator;
         this.train = train;
+        this.splitTrainTest = splitTrainTest;
         return getRecordReader(height, width, channels);
     }
 
     public RecordReader getRecordReader(int numExamples, int batchSize, int height, int width, int channels,
                                         int numLabels, PathLabelGenerator labelGenerator,
-                                         double splitTrainTest, boolean train, Random rng) {
+                                        boolean train, double splitTrainTest, Random rng) {
         this.numExamples = numExamples;
         this.numLabels = numLabels;
         this.rng = rng;
