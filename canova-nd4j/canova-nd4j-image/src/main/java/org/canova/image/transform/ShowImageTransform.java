@@ -20,7 +20,9 @@
 package org.canova.image.transform;
 
 import java.util.Random;
+import javax.swing.JFrame;
 import org.bytedeco.javacv.CanvasFrame;
+import org.bytedeco.javacv.Frame;
 import org.canova.image.data.ImageWritable;
 
 /**
@@ -34,6 +36,11 @@ public class ShowImageTransform extends BaseImageTransform {
     CanvasFrame canvas;
     int delay;
 
+    /** Calls {@code this(canvas, -1)}. */
+    public ShowImageTransform(CanvasFrame canvas) {
+        this(canvas, -1);
+    }
+
     /**
      * Constructs an instance of the ImageTransform from a {@link CanvasFrame}.
      *
@@ -46,6 +53,11 @@ public class ShowImageTransform extends BaseImageTransform {
         this.delay = delay;
     }
 
+    /** Calls {@code this(title, -1)}. */
+    public ShowImageTransform(String title) {
+        this(title, -1);
+    }
+
     /**
      * Constructs an instance of the ImageTransform with a new {@link CanvasFrame}.
      *
@@ -54,13 +66,19 @@ public class ShowImageTransform extends BaseImageTransform {
      */
     public ShowImageTransform(String title, int delay) {
         super(null);
-        this.canvas = new CanvasFrame(title);
+        this.canvas = new CanvasFrame(title, 1.0);
+        this.canvas.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         this.delay = delay;
     }
 
     @Override
     public ImageWritable transform(ImageWritable image, Random random) {
-        canvas.showImage(image.getFrame());
+        if (!canvas.isVisible()) {
+            return image;
+        }
+        Frame frame = image.getFrame();
+        canvas.setCanvasSize(frame.imageWidth, frame.imageHeight);
+        canvas.showImage(frame);
         if (delay >= 0) {
             try {
                 canvas.waitKey(delay);
