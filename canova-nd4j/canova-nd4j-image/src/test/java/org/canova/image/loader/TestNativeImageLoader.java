@@ -23,6 +23,7 @@ import java.util.Random;
 import org.bytedeco.javacpp.indexer.UByteIndexer;
 import org.junit.Test;
 import org.nd4j.linalg.api.ndarray.INDArray;
+import org.nd4j.linalg.factory.Nd4j;
 
 import static org.junit.Assert.assertEquals;
 import static org.bytedeco.javacpp.opencv_core.*;
@@ -152,6 +153,18 @@ public class TestNativeImageLoader {
         assertEquals(70, cropped2.rows());
         assertEquals(95, cropped2.cols());
         assertEquals(img2.channels(), cropped2.channels());
+    }
+
+    @Test
+    public void testNormalizeIfNeeded() throws Exception {
+        int normVal = 255;
+        int w1 = 6, h1 = 10, ch1 = 1;
+        NativeImageLoader loader = new NativeImageLoader(h1, w1, ch1, null, normVal);
+
+        INDArray imgExample = Nd4j.linspace(0, 59, 60);
+        INDArray actualResult = loader.normalizeIfNeeded(imgExample);
+        INDArray expectedResult = imgExample.div(normVal);
+        assertEquals(expectedResult, actualResult);
     }
 
     Mat makeRandomImage(int height, int width, int channels) {

@@ -63,6 +63,7 @@ public abstract class BaseImageRecordReader extends BaseRecordReader {
     protected Map<String, String> fileNameMap = new LinkedHashMap<>();
     protected String pattern; // Pattern to split and segment file name, pass in regex
     protected int patternPosition = 0;
+    protected double normalizeValue = 0;
 
     public final static String HEIGHT = NAME_SPACE + ".height";
     public final static String WIDTH = NAME_SPACE + ".width";
@@ -74,16 +75,17 @@ public abstract class BaseImageRecordReader extends BaseRecordReader {
     }
 
     public BaseImageRecordReader(int height, int width, int channels, PathLabelGenerator labelGenerator) {
-        this(height, width, channels,labelGenerator, null);
+        this(height, width, channels,labelGenerator, null, 0.0);
     }
 
-    public BaseImageRecordReader(int height, int width, int channels, PathLabelGenerator labelGenerator, ImageTransform imageTransform) {
+    public BaseImageRecordReader(int height, int width, int channels, PathLabelGenerator labelGenerator, ImageTransform imageTransform, double normalizeValue) {
         this.height = height;
         this.width = width;
         this.channels = channels;
         this.labelGenerator = labelGenerator;
         this.imageTransform = imageTransform;
         this.appendLabel = labelGenerator !=null? true: false;
+        this.normalizeValue = normalizeValue;
     }
 
 
@@ -133,7 +135,7 @@ public abstract class BaseImageRecordReader extends BaseRecordReader {
     @Override
     public void initialize(InputSplit split) throws IOException {
         if (imageLoader == null) {
-            imageLoader = new NativeImageLoader(height, width, channels, imageTransform);
+            imageLoader = new NativeImageLoader(height, width, channels, imageTransform, normalizeValue);
         }
         inputSplit = split;
         Collection<File> allFiles;
@@ -191,7 +193,7 @@ public abstract class BaseImageRecordReader extends BaseRecordReader {
         if ("imageio".equals(conf.get(IMAGE_LOADER))) {
             this.imageLoader = new ImageLoader(height, width, channels, cropImage);
         } else {
-            this.imageLoader = new NativeImageLoader(height, width, channels, imageTransform);
+            this.imageLoader = new NativeImageLoader(height, width, channels, imageTransform, normalizeValue);
         }
         this.conf = conf;
         initialize(split);
