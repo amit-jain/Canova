@@ -141,7 +141,7 @@ public abstract class BaseImageRecordReader extends BaseRecordReader {
         Collection<File> allFiles;
         URI[] locations = split.locations();
         if (locations != null && locations.length >= 1) {
-            if (locations.length > 1) {
+            if (locations.length > 1 || containsFormat(locations[0].getPath())) {
                 allFiles = new ArrayList<>();
                 for (URI location : locations) {
                     File imgFile = new File(location);
