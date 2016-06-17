@@ -70,6 +70,9 @@ public class CropImageTransform extends BaseImageTransform<Mat> {
 
     @Override
     public ImageWritable transform(ImageWritable image, Random random) {
+        if (image == null) {
+            return null;
+        }
         Mat mat = converter.convert(image.getFrame());
 
         int top = random != null ? random.nextInt(cropTop + 1) : cropTop;

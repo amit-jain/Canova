@@ -32,7 +32,7 @@ public interface ImageTransform {
     /**
      * Takes an image and returns a transformed image.
      *
-     * @param image to transform
+     * @param image to transform, null == end of stream
      * @return      transformed image
      */
     ImageWritable transform(ImageWritable image);
@@ -41,7 +41,7 @@ public interface ImageTransform {
      * Takes an image and returns a transformed image.
      * Uses the random object in the case of random transformations.
      *
-     * @param image  to transform
+     * @param image  to transform, null == end of stream
      * @param random object to use (or null for deterministic)
      * @return       transformed image
      */

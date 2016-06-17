@@ -78,6 +78,9 @@ public class WarpImageTransform extends BaseImageTransform<Mat> {
 
     @Override
     public ImageWritable transform(ImageWritable image, Random random) {
+        if (image == null) {
+            return null;
+        }
         Mat mat = converter.convert(image.getFrame());
 
         Point2f src = new Point2f(4);

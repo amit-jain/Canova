@@ -55,6 +55,7 @@ public class TestImageTransform {
             assertTrue(f.imageWidth <= frame.imageWidth);
             assertEquals(f.imageChannels, frame.imageChannels);
         }
+        assertEquals(null, transform.transform(null));
     }
 
     @Test
@@ -70,6 +71,7 @@ public class TestImageTransform {
             assertEquals(f.imageWidth, frame.imageWidth);
             assertEquals(f.imageChannels, frame.imageChannels);
         }
+        assertEquals(null, transform.transform(null));
     }
 
     @Test
@@ -88,6 +90,7 @@ public class TestImageTransform {
             assertTrue(f.imageWidth <= 3 * frame.imageWidth / 2);
             assertEquals(f.imageChannels, frame.imageChannels);
         }
+        assertEquals(null, transform.transform(null));
     }
 
     @Test
@@ -103,6 +106,7 @@ public class TestImageTransform {
             assertEquals(f.imageWidth, frame.imageWidth);
             assertEquals(f.imageChannels, frame.imageChannels);
         }
+        assertEquals(null, transform.transform(null));
     }
 
     @Test
@@ -122,6 +126,7 @@ public class TestImageTransform {
             assertTrue(f.imageWidth <= frame.imageWidth + 20);
             assertEquals(f.imageChannels, frame.imageChannels);
         }
+        assertEquals(null, transform.transform(null));
     }
 
     @Test
@@ -138,6 +143,20 @@ public class TestImageTransform {
             assertEquals(f.imageWidth, frame.imageWidth);
             assertEquals(f.imageChannels, frame.imageChannels);
         }
+        assertEquals(null, transform.transform(null));
+    }
+
+    @Test
+    public void testShowImageTransform() throws Exception {
+        ImageWritable writable = makeRandomImage(0, 0, 3);
+        ImageTransform transform = new ShowImageTransform("testShowImageTransform", 100);
+
+        for (int i = 0; i < 10; i++) {
+            ImageWritable w = transform.transform(writable);
+            assertEquals(w, writable);
+        }
+
+        assertEquals(null, transform.transform(null));
     }
 
     ImageWritable makeRandomImage(int height, int width, int channels) {
