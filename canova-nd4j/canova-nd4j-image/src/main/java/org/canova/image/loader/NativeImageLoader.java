@@ -270,6 +270,7 @@ public class NativeImageLoader extends BaseImageLoader {
                 }
             }
         }
+        image.deallocate();
         if (normalizeIfNeeded) {
             ret = normalizeIfNeeded(ret);
         }
