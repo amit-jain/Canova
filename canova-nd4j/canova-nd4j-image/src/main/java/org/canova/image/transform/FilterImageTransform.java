@@ -69,6 +69,9 @@ public class FilterImageTransform extends BaseImageTransform {
 
     @Override
     public ImageWritable transform(ImageWritable image, Random random) {
+        if (image == null) {
+            return null;
+        }
         try {
             filter.push(image.getFrame());
             image = new ImageWritable(filter.pull());

@@ -67,6 +67,9 @@ public class ScaleImageTransform extends BaseImageTransform<Mat> {
 
     @Override
     public ImageWritable transform(ImageWritable image, Random random) {
+        if (image == null) {
+            return null;
+        }
         Mat mat = converter.convert(image.getFrame());
 
         int h = Math.round(mat.rows() + dy * (random != null ? 2 * random.nextFloat() - 1 : 1));

@@ -65,6 +65,9 @@ public class FlipImageTransform extends BaseImageTransform<Mat> {
 
     @Override
     public ImageWritable transform(ImageWritable image, Random random) {
+        if (image == null) {
+            return null;
+        }
         Mat mat = converter.convert(image.getFrame());
 
         int mode = random != null ? random.nextInt(4) - 2 : flipMode;
