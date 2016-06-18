@@ -30,6 +30,7 @@ import org.canova.api.split.FileSplit;
 import org.canova.api.split.InputSplit;
 import org.canova.api.split.LimitFileSplit;
 import org.canova.image.recordreader.ImageRecordReader;
+import org.canova.image.transform.ImageTransform;
 import org.nd4j.linalg.api.ndarray.INDArray;
 
 import java.io.File;
@@ -56,12 +57,14 @@ public class LFWLoader extends BaseImageLoader implements Serializable {
     public final static int NUM_LABELS = 5749;
     public final static int SUB_NUM_IMAGES = 1054;
     public final static int SUB_NUM_LABELS = 432;
-    public final static int CHANNELS = 3;
     public final static int HEIGHT = 250;
     public final static int WIDTH = 250;
+    public final static int CHANNELS = 3;
     public final static String DATA_URL = "http://vis-www.cs.umass.edu/lfw/lfw.tgz";
     public final static String LABEL_URL =  "http://vis-www.cs.umass.edu/lfw/lfw-names.txt";
     public final static String SUBSET_URL = "http://vis-www.cs.umass.edu/lfw/lfw-a.tgz";
+    protected final static String REGEX_PATTERN = ".[0-9]+";
+    public final static PathLabelGenerator LABEL_PATTERN = new PatternPathLabelGenerator(REGEX_PATTERN);
 
     public String dataFile = "lfw";
     public String labelFile = "lfw-names.txt";
@@ -69,68 +72,35 @@ public class LFWLoader extends BaseImageLoader implements Serializable {
 
     public String localDir = "lfw";
     public String localSubDir = "lfw-a/lfw";
-    protected File fullDir = new File(BASE_DIR, localDir);
-    protected String regexPattern = ".[0-9]+";
-    protected PathLabelGenerator labelGenerator = new PatternPathLabelGenerator(regexPattern);
+    protected File fullDir;
+
     protected boolean useSubset = false;
-    protected int numExamples = NUM_IMAGES;
-    protected int numLabels = NUM_LABELS;
-    protected int batchSize = 0;
-    protected double splitTrainTest = 1;
-    protected boolean train = true;
+    InputSplit[] inputSplit;
 
     public static Map<String, String> lfwData = new HashMap<>();
     public static Map<String, String> lfwLabel = new HashMap<>();
     public static Map<String, String> lfwSubsetData = new HashMap<>();
 
-
-    public LFWLoader(String localDir, boolean useSubset){
-        this.localDir = localDir;
-        this.fullDir = new File(localDir);
-        this.useSubset = useSubset;
-        if (useSubset) {
-            this.numExamples = SUB_NUM_IMAGES;
-            this.numLabels = SUB_NUM_LABELS;
-        }
-        generateLfwMaps();
-        if (!imageFilesExist()) load();
-    }
-
-    public LFWLoader(boolean useSubset){
-        this.useSubset = useSubset;
-        if (useSubset) {
-            this.fullDir = new File(BASE_DIR, localSubDir);
-            this.numExamples = SUB_NUM_IMAGES;
-            this.numLabels = SUB_NUM_LABELS;
-        }
-        generateLfwMaps();
-        if (!imageFilesExist()) load();
-    }
-
-    public LFWLoader(String path){
-        this(path, false);
-    }
-
     public LFWLoader(){this(false);}
 
-    @Override
-    public INDArray asRowVector(File f) throws IOException {
-        throw new UnsupportedOperationException();
+    public LFWLoader(boolean useSubset){
+        this(new int[] {HEIGHT, WIDTH, CHANNELS,}, null, 0, useSubset);
     }
 
-    @Override
-    public INDArray asRowVector(InputStream inputStream) throws IOException {
-        throw new UnsupportedOperationException();
+    public LFWLoader(int[] imgDim, boolean useSubset){
+        this(imgDim, null, 0, useSubset);
     }
 
-    @Override
-    public INDArray asMatrix(File f) throws IOException {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public INDArray asMatrix(InputStream inputStream) throws IOException {
-        throw new UnsupportedOperationException();
+    public LFWLoader(int[] imgDim, ImageTransform imgTransform, int normalizeValue, boolean useSubset){
+        this.height = imgDim[0];
+        this.width = imgDim[1];
+        this.channels = imgDim[2];
+        this.imageTransform  = imgTransform;
+        this.normalizeValue = normalizeValue;
+        this.useSubset = useSubset;
+        this.localDir = useSubset? localSubDir: localDir;
+        this.fullDir = new File(BASE_DIR, localDir);
+        generateLfwMaps();
     }
 
     public void generateLfwMaps() {
@@ -151,21 +121,27 @@ public class LFWLoader extends BaseImageLoader implements Serializable {
         }
 
     }
+    public void load() {
+        load(NUM_IMAGES, NUM_IMAGES, NUM_LABELS, LABEL_PATTERN, 1, rng);
+    }
+    public void load(int numExamples, int batchSize, int numLabels, PathLabelGenerator labelGenerator, double splitTrainTest, Random rng)  {
+        if (!imageFilesExist()){
+            if (!fullDir.exists() || fullDir.listFiles() == null || fullDir.listFiles().length == 0) {
+                fullDir.mkdir();
 
-    public void load()  {
-        if (!fullDir.exists() || fullDir.listFiles() == null || fullDir.listFiles().length == 0) {
-            fullDir.mkdir();
-
-            if (useSubset) {
-                log.info("Downloading {} subset...", localDir);
-                downloadAndUntar(lfwSubsetData, fullDir);
-            }
-            else {
-                log.info("Downloading {}...", localDir);
-                downloadAndUntar(lfwData, fullDir);
-                downloadAndUntar(lfwLabel, fullDir);
+                if (useSubset) {
+                    log.info("Downloading {} subset...", localDir);
+                    downloadAndUntar(lfwSubsetData, fullDir);
+                } else {
+                    log.info("Downloading {}...", localDir);
+                    downloadAndUntar(lfwData, fullDir);
+                    downloadAndUntar(lfwLabel, fullDir);
+                }
             }
         }
+        FileSplit fileSplit = new FileSplit(fullDir, ALLOWED_FORMATS, rng);
+        BalancedPathFilter pathFilter = new BalancedPathFilter(rng, ALLOWED_FORMATS,labelGenerator, numExamples, numLabels, 10, 0, null);
+        inputSplit = fileSplit.sample(pathFilter, numExamples*splitTrainTest, numExamples*(1-splitTrainTest));
     }
 
     public boolean imageFilesExist(){
@@ -182,63 +158,33 @@ public class LFWLoader extends BaseImageLoader implements Serializable {
     }
 
 
-    public RecordReader getRecordReader() {
-        return getRecordReader(HEIGHT, WIDTH, CHANNELS);
+    public RecordReader getRecordReader(int numExamples) {
+        return getRecordReader(numExamples, numExamples, new int[] {height, width, channels}, useSubset? SUB_NUM_LABELS: NUM_LABELS, LABEL_PATTERN, true, 1, new Random(System.currentTimeMillis()));
     }
 
-    public RecordReader getRecordReader(int numExamples) {
-        this.numExamples = numExamples;
-        return getRecordReader(HEIGHT, WIDTH, CHANNELS);
+    public RecordReader getRecordReader(int numExamples, int batchSize, int numLabels,Random rng) {
+        return getRecordReader(numExamples, batchSize, new int[] {height, width, channels}, numLabels, LABEL_PATTERN, true, 1, rng);
     }
 
     public RecordReader getRecordReader(int numExamples, int batchSize, boolean train, double splitTrainTest) {
-        this.numExamples = numExamples;
-        this.batchSize = batchSize;
-        this.train = train;
-        this.splitTrainTest = splitTrainTest;
-        return getRecordReader(HEIGHT, WIDTH, CHANNELS);
+        return getRecordReader(numExamples, batchSize, new int[] {height, width, channels}, useSubset? SUB_NUM_LABELS: NUM_LABELS, LABEL_PATTERN, train, splitTrainTest, new Random(System.currentTimeMillis()));
     }
 
-    public RecordReader getRecordReader(int numExamples, int batchSize, int height, int width, int channels, boolean train, double splitTrainTest, Random rng) {
-        this.numExamples = numExamples;
-        this.rng = rng;
-        this.batchSize = batchSize;
-        this.train = train;
-        this.splitTrainTest = splitTrainTest;
-        return getRecordReader(height, width, channels);
+    public RecordReader getRecordReader(int numExamples, int batchSize, int[] imgDim, boolean train, double splitTrainTest, Random rng) {
+        return getRecordReader(numExamples, batchSize, imgDim, useSubset? SUB_NUM_LABELS: NUM_LABELS, LABEL_PATTERN, train, splitTrainTest, rng);
     }
 
-
-    public RecordReader getRecordReader(int numExamples, int batchSize, int height, int width, int channels, PathLabelGenerator labelGenerator, boolean train, double splitTrainTest, Random rng) {
-        this.numExamples = numExamples;
-        this.rng = rng;
-        this.batchSize = batchSize;
-        this.labelGenerator = labelGenerator;
-        this.train = train;
-        this.splitTrainTest = splitTrainTest;
-        return getRecordReader(height, width, channels);
+    public RecordReader getRecordReader(int numExamples, int batchSize, PathLabelGenerator labelGenerator, boolean train, double splitTrainTest, Random rng) {
+        return getRecordReader(numExamples, batchSize, new int[] {height, width, channels}, useSubset? SUB_NUM_LABELS: NUM_LABELS, labelGenerator, train, splitTrainTest, rng);
     }
 
-    public RecordReader getRecordReader(int numExamples, int batchSize, int height, int width, int channels,
-                                        int numLabels, PathLabelGenerator labelGenerator,
-                                        boolean train, double splitTrainTest, Random rng) {
-        this.numExamples = numExamples;
-        this.numLabels = numLabels;
-        this.rng = rng;
-        this.labelGenerator = labelGenerator;
-        this.batchSize = batchSize;
-        this.splitTrainTest = splitTrainTest;
-        this.train = train;
-        return getRecordReader(height, width, channels);
+    public RecordReader getRecordReader(int numExamples, int batchSize, int[] imgDim, PathLabelGenerator labelGenerator, boolean train, double splitTrainTest, Random rng) {
+        return getRecordReader(numExamples, batchSize, imgDim, useSubset? SUB_NUM_LABELS: NUM_LABELS, labelGenerator, train, splitTrainTest, rng);
     }
 
-    public RecordReader getRecordReader(int height, int width, int channels) {
-        // TODO add image scaling flexibility for iterator
-        if (!imageFilesExist()) load();
-        RecordReader recordReader = new ImageRecordReader(height, width, channels, labelGenerator);
-        FileSplit fileSplit = new FileSplit(fullDir, BaseImageLoader.ALLOWED_FORMATS, rng);
-        BalancedPathFilter pathFilter = new BalancedPathFilter(rng, BaseImageLoader.ALLOWED_FORMATS, labelGenerator, numExamples, numLabels, 0, batchSize);
-        InputSplit[] inputSplit = fileSplit.sample(pathFilter, numExamples*splitTrainTest, numExamples*(1-splitTrainTest));
+    public RecordReader getRecordReader(int numExamples, int batchSize, int[]imgDim, int numLabels, PathLabelGenerator labelGenerator, boolean train, double splitTrainTest, Random rng) {
+        load(numExamples, batchSize, numLabels, labelGenerator, splitTrainTest, rng);
+        RecordReader recordReader = new ImageRecordReader(imgDim[0], imgDim[1], imgDim[2], labelGenerator, imageTransform, normalizeValue);
 
         try {
             InputSplit data = train? inputSplit[0]: inputSplit[1];
@@ -247,6 +193,26 @@ public class LFWLoader extends BaseImageLoader implements Serializable {
             e.printStackTrace();
         }
         return recordReader;
+    }
+
+    @Override
+    public INDArray asRowVector(File f) throws IOException {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public INDArray asRowVector(InputStream inputStream) throws IOException {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public INDArray asMatrix(File f) throws IOException {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public INDArray asMatrix(InputStream inputStream) throws IOException {
+        throw new UnsupportedOperationException();
     }
 
 }

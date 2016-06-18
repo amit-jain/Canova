@@ -3,6 +3,7 @@ package org.canova.image.loader;
 import com.google.common.annotations.VisibleForTesting;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
+import org.canova.image.transform.ImageTransform;
 import org.nd4j.linalg.api.ndarray.INDArray;
 
 import java.io.*;
@@ -21,6 +22,7 @@ public class CifarLoader extends NativeImageLoader implements Serializable {
     public final static int WIDTH = 32;
     public final static int CHANNELS = 3;
     public final static int BYTEFILELEN = 3073;
+
     public String dataUrl = "https://www.cs.toronto.edu/~kriz/cifar-10-python.tar.gz"; // used for python version - similar structure to datBin structure
     public String dataFile = "cifar-10-python";
     public static String dataBinUrl = "https://www.cs.toronto.edu/~kriz/cifar-10-binary.tar.gz";
@@ -33,33 +35,32 @@ public class CifarLoader extends NativeImageLoader implements Serializable {
 
     public static String localDir = "cifar";
     protected static File fullDir = new File(BASE_DIR, localDir);
-
-    protected String regexPattern;
-    protected int numExamples = NUM_TRAIN_IMAGES;
-    protected int numLabels = NUM_LABELS;
-    protected String version = "TRAIN"; // make either TRAIN or TEST to different types of files loaded
-
+    protected boolean train = true;
     public static Map<String, String> cifarTrainData = new HashMap<>();
-
-    public CifarLoader(String version){
-        this.version = version;
-    }
-
-    public CifarLoader(int height, int width, int channels,String version){
-        super(height, width, channels);
-        this.version = version;
-    }
-
-    public CifarLoader(String version, String localDir){
-        this.version = version;
-        this.localDir = localDir;
-        this.fullDir = new File(localDir);
-        load();
-    }
-
+    // Using this in spark to reference where to load data from
     public final static File TRAINPATH = new File(fullDir, "train");
     public final static File TESTPATH = new File(fullDir, FilenameUtils.concat(dataBinFile, testFileName));
     public final static File LABELPATH = new File(fullDir, FilenameUtils.concat(dataBinFile, labelFileName));
+
+    public CifarLoader(boolean train){
+        this.train = train;
+    }
+
+    public CifarLoader(int height, int width, int channels, boolean train){
+        super(height, width, channels);
+        this.train = train;
+    }
+    public CifarLoader(int height, int width, int channels, ImageTransform imgTransform, int normalizeValue, boolean train){
+        super(height, width, channels, imgTransform, normalizeValue);
+        this.train = train;
+    }
+
+    public CifarLoader(boolean train, String localDir){
+        this.localDir = localDir;
+        this.fullDir = new File(localDir);
+        this.train = train;
+        load();
+    }
 
     public CifarLoader(){
         load();
@@ -134,27 +135,23 @@ public class CifarLoader extends NativeImageLoader implements Serializable {
     }
 
     public InputStream getInputStream() {
-//        throw new NotImplementedException("Cifar loader is still development. Pull content directly from https://www.cs.toronto.edu/~kriz/cifar-10-python.tar.gz for now.");
         load();
         InputStream in = null;
 
         try {
-            // Create inputStream
-            switch (version) {
-                case "TRAIN":
-                    Collection<File> subFiles = FileUtils.listFiles(new File(fullDir, dataBinFile), new String[] {"bin"}, true);
-                    Iterator trainIter = subFiles.iterator();
-                    in = new SequenceInputStream(new FileInputStream((File) trainIter.next()), new FileInputStream((File) trainIter.next()));
-                    while (trainIter.hasNext()) {
-                        File nextFile = (File) trainIter.next();
-                        if(!testFileName.equals(nextFile.getName()))
-                            in = new SequenceInputStream(in, new FileInputStream(nextFile));
-                    }
-                    break;
-                case "TEST":
-                    in = new FileInputStream(new File(fullDir, FilenameUtils.concat(dataBinFile, testFileName)));
-
+        // Create inputStream
+            if(train) {
+                Collection<File> subFiles = FileUtils.listFiles(new File(fullDir, dataBinFile), new String[] {"bin"}, true);
+                Iterator trainIter = subFiles.iterator();
+                in = new SequenceInputStream(new FileInputStream((File) trainIter.next()), new FileInputStream((File) trainIter.next()));
+                while (trainIter.hasNext()) {
+                    File nextFile = (File) trainIter.next();
+                    if(!testFileName.equals(nextFile.getName()))
+                        in = new SequenceInputStream(in, new FileInputStream(nextFile));
+                }
             }
+            else
+                in = new FileInputStream(new File(fullDir, FilenameUtils.concat(dataBinFile, testFileName)));
         } catch(Exception e) {
             e.printStackTrace();
         }
