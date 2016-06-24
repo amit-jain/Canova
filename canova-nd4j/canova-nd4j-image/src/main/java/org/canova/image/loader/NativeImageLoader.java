@@ -270,7 +270,7 @@ public class NativeImageLoader extends BaseImageLoader {
                 }
             }
         }
-        image.deallocate();
+        image.data(); // dummy call to make sure it does not get deallocated prematurely
         if (normalizeIfNeeded) {
             ret = normalizeIfNeeded(ret);
         }
