@@ -28,6 +28,7 @@ import org.bytedeco.javacpp.indexer.Indexer;
 import org.bytedeco.javacv.OpenCVFrameConverter;
 import org.canova.image.data.ImageWritable;
 import org.canova.image.transform.ImageTransform;
+import org.nd4j.linalg.api.buffer.DataBuffer;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.factory.Nd4j;
 
@@ -45,7 +46,7 @@ public class NativeImageLoader extends BaseImageLoader {
 
     public static final String[] ALLOWED_FORMATS =
             {"bmp", "gif", "jpg", "jpeg", "jp2", "pbm", "pgm", "ppm", "pnm", "png", "tif", "tiff", "exr", "webp",
-             "BMP", "GIF", "JPG", "JPEG", "JP2", "PBM", "PGM", "PPM", "PNM", "PNG", "TIF", "TIFF", "EXR", "WEBP"};
+                    "BMP", "GIF", "JPG", "JPEG", "JP2", "PBM", "PGM", "PPM", "PNM", "PNG", "TIF", "TIFF", "EXR", "WEBP"};
 
     OpenCVFrameConverter.ToMat converter = null;
 
@@ -172,9 +173,9 @@ public class NativeImageLoader extends BaseImageLoader {
         Mat mat2 = new Mat(height, width, CV_8UC(channels));
         // swap bytes if needed
         int[] swap = { 0,3, 1,2, 2,1, 3,0 },
-              copy = { 0,0, 1,1, 2,2, 3,3 },
-              fromTo = channels > 1 && ByteOrder.nativeOrder().equals(ByteOrder.LITTLE_ENDIAN)
-                     ? swap : copy;
+                copy = { 0,0, 1,1, 2,2, 3,3 },
+                fromTo = channels > 1 && ByteOrder.nativeOrder().equals(ByteOrder.LITTLE_ENDIAN)
+                        ? swap : copy;
         mixChannels(mat, 1, mat2, 1, fromTo, fromTo.length / 2);
         if (tempPix != null) {
             pixDestroy(tempPix);
@@ -243,8 +244,9 @@ public class NativeImageLoader extends BaseImageLoader {
             }
             if (code < 0) {
                 throw new IOException("Cannot convert from " + image.channels()
-                                                    + " to " + channels + " channels.");
+                        + " to " + channels + " channels.");
             }
+
             Mat newimage = new Mat();
             cvtColor(image, newimage, code);
             image = newimage;
@@ -252,13 +254,18 @@ public class NativeImageLoader extends BaseImageLoader {
         if (centerCropIfNeeded) {
             image = centerCropIfNeeded(image);
         }
+
         image = scalingIfNeed(image);
 
         int rows = image.rows();
         int cols = image.cols();
         int channels = image.channels();
         Indexer idx = image.createIndexer();
-        INDArray ret = channels > 1 ? Nd4j.create(channels, rows, cols) : Nd4j.create(rows, cols);
+        //wrap a data buffer with the pointer and indexer
+        DataBuffer buff = Nd4j.createBuffer(idx.pointer(), DataBuffer.Type.INT,rows * cols * channels,idx);
+        //note that we create a transposed image here to flip the values
+        INDArray ret = channels > 1 ? Nd4j.create(buff,new int[]{channels, rows, cols}).transpose() : Nd4j.create(rows, cols);
+/*
         for (int k = 0; k < channels; k++) {
             for (int i = 0; i < rows; i++) {
                 for (int j = 0; j < cols; j++) {
@@ -270,6 +277,8 @@ public class NativeImageLoader extends BaseImageLoader {
                 }
             }
         }
+*/
+
         image.data(); // dummy call to make sure it does not get deallocated prematurely
         if (normalizeIfNeeded) {
             ret = normalizeIfNeeded(ret);
