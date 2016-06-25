@@ -264,20 +264,8 @@ public class NativeImageLoader extends BaseImageLoader {
         //wrap a data buffer with the pointer and indexer
         DataBuffer buff = Nd4j.createBuffer(idx.pointer(), DataBuffer.Type.INT,rows * cols * channels,idx);
         //note that we create a transposed image here to flip the values
-        INDArray ret = channels > 1 ? Nd4j.create(buff,new int[]{channels, rows, cols}).transpose() : Nd4j.create(rows, cols);
-/*
-        for (int k = 0; k < channels; k++) {
-            for (int i = 0; i < rows; i++) {
-                for (int j = 0; j < cols; j++) {
-                    if (channels > 1) {
-                        ret.putScalar(k, i, j, idx.getDouble(i, j, k));
-                    } else {
-                        ret.putScalar(i, j, idx.getDouble(i, j));
-                    }
-                }
-            }
-        }
-*/
+        INDArray ret = channels > 1 ? Nd4j.create(buff,new int[]{rows, cols,channels}).permute(2,0,1): Nd4j.create(rows, cols);
+
 
         image.data(); // dummy call to make sure it does not get deallocated prematurely
         if (normalizeIfNeeded) {
