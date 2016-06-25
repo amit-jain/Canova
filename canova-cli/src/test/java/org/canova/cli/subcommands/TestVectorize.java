@@ -240,7 +240,7 @@ public class TestVectorize {
     }
 
 
- 
+
 
     /**
      * Testing the normal image input format reader

@@ -22,13 +22,21 @@ package org.canova.image.loader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import org.apache.commons.io.IOUtils;
+import org.bytedeco.javacpp.DoublePointer;
+import org.bytedeco.javacpp.FloatPointer;
+import org.bytedeco.javacpp.IntPointer;
+import org.bytedeco.javacpp.Pointer;
+import org.bytedeco.javacpp.indexer.FloatIndexer;
+import org.bytedeco.javacpp.indexer.FloatRawIndexer;
 import org.bytedeco.javacpp.indexer.Indexer;
 import org.bytedeco.javacv.OpenCVFrameConverter;
 import org.canova.image.data.ImageWritable;
 import org.canova.image.transform.ImageTransform;
 import org.nd4j.linalg.api.buffer.DataBuffer;
+import org.nd4j.linalg.api.buffer.FloatBuffer;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.factory.Nd4j;
 
@@ -260,19 +268,20 @@ public class NativeImageLoader extends BaseImageLoader {
         int rows = image.rows();
         int cols = image.cols();
         int channels = image.channels();
-        Indexer idx = image.createIndexer();
+        Indexer idx = image.createIndexer(true);
         //wrap a data buffer with the pointer and indexer
-        DataBuffer buff = Nd4j.createBuffer(idx.pointer(), DataBuffer.Type.INT,rows * cols * channels,idx);
+        DataBuffer buff = Nd4j.createBuffer(image.arrayData(), DataBuffer.Type.FLOAT,rows * cols * channels,idx);
         //note that we create a transposed image here to flip the values
-        INDArray ret = channels > 1 ? Nd4j.create(buff,new int[]{rows, cols,channels}).permute(2,0,1): Nd4j.create(rows, cols);
-
-
+        //note here that we dup the buffer so it can be used in other operations
+        INDArray ret = channels > 1 ? Nd4j.create(buff.dup(),new int[]{rows, cols,channels}).permute(2,0,1): Nd4j.create(buff.dup(),new int[]{rows, cols});
         image.data(); // dummy call to make sure it does not get deallocated prematurely
         if (normalizeIfNeeded) {
             ret = normalizeIfNeeded(ret);
         }
         return ret;
     }
+
+
 
     protected INDArray normalizeIfNeeded(INDArray image){
         return image.div(normalizeValue);

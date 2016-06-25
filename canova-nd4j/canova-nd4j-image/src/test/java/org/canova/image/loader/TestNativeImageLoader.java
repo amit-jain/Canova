@@ -20,6 +20,8 @@
 package org.canova.image.loader;
 
 import java.util.Random;
+
+import org.bytedeco.javacpp.indexer.FloatIndexer;
 import org.bytedeco.javacpp.indexer.UByteIndexer;
 import org.junit.Test;
 import org.nd4j.linalg.api.ndarray.INDArray;
@@ -174,6 +176,7 @@ public class TestNativeImageLoader {
         if (width <= 0) {
             width = rng.nextInt() % 100 + 100;
         }
+
         Mat img = new Mat(height, width, CV_8UC(channels));
         UByteIndexer idx = img.createIndexer();
         for (int i = 0; i < height; i++) {
