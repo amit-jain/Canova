@@ -24,12 +24,21 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteOrder;
 import org.apache.commons.io.IOUtils;
+import org.bytedeco.javacpp.DoublePointer;
+import org.bytedeco.javacpp.FloatPointer;
+import org.bytedeco.javacpp.Pointer;
+import org.bytedeco.javacpp.indexer.DoubleIndexer;
+import org.bytedeco.javacpp.indexer.FloatIndexer;
 import org.bytedeco.javacpp.indexer.Indexer;
+import org.bytedeco.javacpp.indexer.IntIndexer;
+import org.bytedeco.javacpp.indexer.UByteIndexer;
+import org.bytedeco.javacpp.indexer.UShortIndexer;
 import org.bytedeco.javacv.OpenCVFrameConverter;
 import org.canova.image.data.ImageWritable;
 import org.canova.image.transform.ImageTransform;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.factory.Nd4j;
+import org.nd4j.linalg.util.ArrayUtil;
 
 import static org.bytedeco.javacpp.lept.*;
 import static org.bytedeco.javacpp.opencv_core.*;
@@ -258,14 +267,108 @@ public class NativeImageLoader extends BaseImageLoader {
         int cols = image.cols();
         int channels = image.channels();
         Indexer idx = image.createIndexer();
-        INDArray ret = channels > 1 ? Nd4j.create(channels, rows, cols) : Nd4j.create(rows, cols);
-        for (int k = 0; k < channels; k++) {
-            for (int i = 0; i < rows; i++) {
-                for (int j = 0; j < cols; j++) {
-                    if (channels > 1) {
-                        ret.putScalar(k, i, j, idx.getDouble(i, j, k));
-                    } else {
-                        ret.putScalar(i, j, idx.getDouble(i, j));
+        INDArray ret = Nd4j.create(channels, rows, cols);
+        Pointer pointer = ret.data().pointer();
+        int[] stride = ret.stride();
+        boolean done = false;
+        if (pointer instanceof FloatPointer) {
+            FloatIndexer retidx = FloatIndexer.create((FloatPointer)pointer,
+                    new long[] {channels, rows, cols}, new long[] {stride[0], stride[1], stride[2]} );
+            if (idx instanceof UByteIndexer) {
+                UByteIndexer ubyteidx = (UByteIndexer)idx;
+                for (int k = 0; k < channels; k++) {
+                    for (int i = 0; i < rows; i++) {
+                        for (int j = 0; j < cols; j++) {
+                            retidx.put(k, i, j, ubyteidx.get(i, j, k));
+                        }
+                    }
+                }
+                done = true;
+            } else if (idx instanceof UShortIndexer) {
+                UShortIndexer ushortidx = (UShortIndexer)idx;
+                for (int k = 0; k < channels; k++) {
+                    for (int i = 0; i < rows; i++) {
+                        for (int j = 0; j < cols; j++) {
+                            retidx.put(k, i, j, ushortidx.get(i, j, k));
+                        }
+                    }
+                }
+                done = true;
+            } else if (idx instanceof IntIndexer) {
+                IntIndexer intidx = (IntIndexer)idx;
+                for (int k = 0; k < channels; k++) {
+                    for (int i = 0; i < rows; i++) {
+                        for (int j = 0; j < cols; j++) {
+                            retidx.put(k, i, j, intidx.get(i, j, k));
+                        }
+                    }
+                }
+                done = true;
+            } else if (idx instanceof FloatIndexer) {
+                FloatIndexer floatidx = (FloatIndexer)idx;
+                for (int k = 0; k < channels; k++) {
+                    for (int i = 0; i < rows; i++) {
+                        for (int j = 0; j < cols; j++) {
+                            retidx.put(k, i, j, floatidx.get(i, j, k));
+                        }
+                    }
+                }
+                done = true;
+            }
+        } else if (pointer instanceof DoublePointer) {
+            DoubleIndexer retidx = DoubleIndexer.create((DoublePointer)pointer,
+                    new long[] {channels, rows, cols}, new long[] {stride[0], stride[1], stride[2]} );
+            if (idx instanceof UByteIndexer) {
+                UByteIndexer ubyteidx = (UByteIndexer)idx;
+                for (int k = 0; k < channels; k++) {
+                    for (int i = 0; i < rows; i++) {
+                        for (int j = 0; j < cols; j++) {
+                            retidx.put(k, i, j, ubyteidx.get(i, j, k));
+                        }
+                    }
+                }
+                done = true;
+            } else if (idx instanceof UShortIndexer) {
+                UShortIndexer ushortidx = (UShortIndexer)idx;
+                for (int k = 0; k < channels; k++) {
+                    for (int i = 0; i < rows; i++) {
+                        for (int j = 0; j < cols; j++) {
+                            retidx.put(k, i, j, ushortidx.get(i, j, k));
+                        }
+                    }
+                }
+                done = true;
+            } else if (idx instanceof IntIndexer) {
+                IntIndexer intidx = (IntIndexer)idx;
+                for (int k = 0; k < channels; k++) {
+                    for (int i = 0; i < rows; i++) {
+                        for (int j = 0; j < cols; j++) {
+                            retidx.put(k, i, j, intidx.get(i, j, k));
+                        }
+                    }
+                }
+                done = true;
+            } else if (idx instanceof FloatIndexer) {
+                FloatIndexer floatidx = (FloatIndexer)idx;
+                for (int k = 0; k < channels; k++) {
+                    for (int i = 0; i < rows; i++) {
+                        for (int j = 0; j < cols; j++) {
+                            retidx.put(k, i, j, floatidx.get(i, j, k));
+                        }
+                    }
+                }
+                done = true;
+            }
+        }
+        if (!done) {
+            for (int k = 0; k < channels; k++) {
+                for (int i = 0; i < rows; i++) {
+                    for (int j = 0; j < cols; j++) {
+                        if (channels > 1) {
+                            ret.putScalar(k, i, j, idx.getDouble(i, j, k));
+                        } else {
+                            ret.putScalar(i, j, idx.getDouble(i, j));
+                        }
                     }
                 }
             }
@@ -274,7 +377,7 @@ public class NativeImageLoader extends BaseImageLoader {
         if (normalizeIfNeeded) {
             ret = normalizeIfNeeded(ret);
         }
-        return ret;
+        return ret.reshape(ArrayUtil.combine(new int[]{1},ret.shape()));
     }
 
     protected INDArray normalizeIfNeeded(INDArray image){

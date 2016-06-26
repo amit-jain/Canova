@@ -21,7 +21,6 @@
 package org.canova.image.recordreader;
 
 
-import java.io.File;
 import java.util.*;
 import org.canova.api.io.labels.PathLabelGenerator;
 import org.canova.image.transform.ImageTransform;

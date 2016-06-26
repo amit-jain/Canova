@@ -43,109 +43,7 @@ import static org.junit.Assert.assertEquals;
 
 public class TestVectorize {
 
-    private static final String MNIST_FILENAME = MNISTRecordReader.MNIST_ROOT + MNISTRecordReader.TRAINING_FILES_FILENAME_UNZIPPED;
 
-    public void checkForMNISTLocally() {
-
-
-        // 1. check for the MNIST data first!
-
-        // does it exist?
-
-        // if not, then let's download it
-
-        System.out.println( "Checking to see if MNIST exists locally: " + MNISTRecordReader.MNIST_ROOT );
-
-        if(!new File(MNISTRecordReader.MNIST_ROOT).exists()) {
-
-            new File(MNISTRecordReader.MNIST_ROOT).mkdir();
-
-            System.out.println("Downloading and unzipping the MNIST dataset locally to: " + MNISTRecordReader.MNIST_ROOT );
-            try {
-                //new MnistFetcher().downloadAndUntar();
-                downloadAndUntar();
-            } catch (IOException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
-        } else {
-
-            System.out.println( "MNIST already exists locally..." );
-
-        }
-
-        if ( new File(MNIST_FILENAME).exists() ) {
-            System.out.println( "The images file exists locally unzipped!" );
-        } else {
-            System.out.println( "The images file DOES NOT exist locally unzipped!" );
-            System.out.println("Downloading and unzipping the MNIST dataset locally to: " + MNISTRecordReader.MNIST_ROOT );
-            try {
-                //new MnistFetcher().downloadAndUntar();
-                downloadAndUntar();
-            } catch (IOException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
-
-        }
-
-    }
-
-
-
-
-    /**
-     * Added another copy of this method because MNISTFetcher uses the user's system home directory
-     * and we couldnt specify that in the canova conf file
-     *
-     * @return
-     * @throws IOException
-     */
-    public static File downloadAndUntar() throws IOException {
-
-        File fileDir;
-
-
-//		if(fileDir != null) {
-        //		return fileDir;
-        //}
-        // mac gives unique tmp each run and we want to store this persist
-        // this data across restarts
-        //File tmpDir = new File(System.getProperty("user.home"));
-
-        File baseDir = new File( MNISTRecordReader.MNIST_ROOT );
-        if(!(baseDir.isDirectory() || baseDir.mkdir())) {
-            throw new IOException("Could not mkdir " + baseDir);
-        }
-
-
-        //log.info("Downloading mnist...");
-        // getFromOrigin training records
-        File tarFile = new File(baseDir, MNISTRecordReader.TRAINING_FILES_FILENAME);
-
-        if(!tarFile.isFile()) {
-            FileUtils.copyURLToFile(new URL(MNISTRecordReader.TRAINING_FILES_URL), tarFile);
-        }
-
-        ArchiveUtils.unzipFileTo(tarFile.getAbsolutePath(),baseDir.getAbsolutePath());
-
-
-
-
-        // getFromOrigin training records
-        File labels = new File(baseDir, MNISTRecordReader.TRAINING_FILE_LABELS_FILENAME);
-
-        if(!labels.isFile()) {
-            FileUtils.copyURLToFile(new URL(MNISTRecordReader.TRAINING_FILE_LABELS_URL), labels);
-        }
-
-        ArchiveUtils.unzipFileTo(labels.getAbsolutePath(), baseDir.getAbsolutePath());
-
-
-
-        fileDir = baseDir;
-        return fileDir;
-    }
 
     public static File download_LFW_AndUntar(String workingBaseDir) throws Exception {
         new LFWLoader().load();
@@ -342,33 +240,7 @@ public class TestVectorize {
     }
 
 
-    @Test
-    public void testExecuteImageCustomMNISTInputFormatConversionWorkflow() throws Exception {
 
-        checkForMNISTLocally();
-
-        String[] args = { "-conf", "src/test/resources/image/conf/mnist/unit_test_conf.txt" };
-        Vectorize vecCommand = new Vectorize( args );
-
-        vecCommand.execute();
-
-        // now check the output
-
-        // 1. how many labels are there?
-
-        // 2. how many vectors are in the output?
-
-        int count = checkNumberOfRecordsInSVMLightOutput( vecCommand.outputVectorFilename );
-        int labelCount = countLabelsInSVMLightOutput( vecCommand.outputVectorFilename );
-
-        //System.out.println( "Vectors in file: " + count );
-
-        // this seems .... odd?
-        assertEquals( 59999, count );
-        assertEquals( 10, labelCount );
-
-
-    }
 
     /**
      * Testing the normal image input format reader
