@@ -22,21 +22,20 @@ package org.canova.image.loader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import org.apache.commons.io.IOUtils;
 import org.bytedeco.javacpp.DoublePointer;
 import org.bytedeco.javacpp.FloatPointer;
-import org.bytedeco.javacpp.IntPointer;
 import org.bytedeco.javacpp.Pointer;
+import org.bytedeco.javacpp.indexer.DoubleIndexer;
 import org.bytedeco.javacpp.indexer.FloatIndexer;
-import org.bytedeco.javacpp.indexer.FloatRawIndexer;
 import org.bytedeco.javacpp.indexer.Indexer;
+import org.bytedeco.javacpp.indexer.IntIndexer;
+import org.bytedeco.javacpp.indexer.UByteIndexer;
+import org.bytedeco.javacpp.indexer.UShortIndexer;
 import org.bytedeco.javacv.OpenCVFrameConverter;
 import org.canova.image.data.ImageWritable;
 import org.canova.image.transform.ImageTransform;
-import org.nd4j.linalg.api.buffer.DataBuffer;
-import org.nd4j.linalg.api.buffer.FloatBuffer;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.factory.Nd4j;
 
@@ -54,7 +53,7 @@ public class NativeImageLoader extends BaseImageLoader {
 
     public static final String[] ALLOWED_FORMATS =
             {"bmp", "gif", "jpg", "jpeg", "jp2", "pbm", "pgm", "ppm", "pnm", "png", "tif", "tiff", "exr", "webp",
-                    "BMP", "GIF", "JPG", "JPEG", "JP2", "PBM", "PGM", "PPM", "PNM", "PNG", "TIF", "TIFF", "EXR", "WEBP"};
+             "BMP", "GIF", "JPG", "JPEG", "JP2", "PBM", "PGM", "PPM", "PNM", "PNG", "TIF", "TIFF", "EXR", "WEBP"};
 
     OpenCVFrameConverter.ToMat converter = null;
 
@@ -181,9 +180,9 @@ public class NativeImageLoader extends BaseImageLoader {
         Mat mat2 = new Mat(height, width, CV_8UC(channels));
         // swap bytes if needed
         int[] swap = { 0,3, 1,2, 2,1, 3,0 },
-                copy = { 0,0, 1,1, 2,2, 3,3 },
-                fromTo = channels > 1 && ByteOrder.nativeOrder().equals(ByteOrder.LITTLE_ENDIAN)
-                        ? swap : copy;
+              copy = { 0,0, 1,1, 2,2, 3,3 },
+              fromTo = channels > 1 && ByteOrder.nativeOrder().equals(ByteOrder.LITTLE_ENDIAN)
+                     ? swap : copy;
         mixChannels(mat, 1, mat2, 1, fromTo, fromTo.length / 2);
         if (tempPix != null) {
             pixDestroy(tempPix);
@@ -252,9 +251,8 @@ public class NativeImageLoader extends BaseImageLoader {
             }
             if (code < 0) {
                 throw new IOException("Cannot convert from " + image.channels()
-                        + " to " + channels + " channels.");
+                                                    + " to " + channels + " channels.");
             }
-
             Mat newimage = new Mat();
             cvtColor(image, newimage, code);
             image = newimage;
@@ -262,26 +260,124 @@ public class NativeImageLoader extends BaseImageLoader {
         if (centerCropIfNeeded) {
             image = centerCropIfNeeded(image);
         }
-
         image = scalingIfNeed(image);
 
         int rows = image.rows();
         int cols = image.cols();
         int channels = image.channels();
-        Indexer idx = image.createIndexer(true);
-        //wrap a data buffer with the pointer and indexer
-        DataBuffer buff = Nd4j.createBuffer(image.arrayData(), DataBuffer.Type.FLOAT,rows * cols * channels,idx);
-        //note that we create a transposed image here to flip the values
-        //note here that we dup the buffer so it can be used in other operations
-        INDArray ret = channels > 1 ? Nd4j.create(buff.dup(),new int[]{rows, cols,channels}).permute(2,0,1): Nd4j.create(buff.dup(),new int[]{rows, cols});
+        Indexer idx = image.createIndexer();
+        INDArray ret = channels > 1 ? Nd4j.create(channels, rows, cols) : Nd4j.create(rows, cols);
+        Pointer pointer = ret.data().pointer();
+        int[] stride = ret.stride();
+        boolean done = false;
+        if (pointer instanceof FloatPointer) {
+            FloatIndexer retidx = FloatIndexer.create((FloatPointer)pointer,
+                    new long[] {channels, rows, cols}, new long[] {stride[0], stride[1], stride[2]} );
+            if (idx instanceof UByteIndexer) {
+                UByteIndexer ubyteidx = (UByteIndexer)idx;
+                for (int k = 0; k < channels; k++) {
+                    for (int i = 0; i < rows; i++) {
+                        for (int j = 0; j < cols; j++) {
+                            retidx.put(k, i, j, ubyteidx.get(i, j, k));
+                        }
+                    }
+                }
+                done = true;
+            } else if (idx instanceof UShortIndexer) {
+                UShortIndexer ushortidx = (UShortIndexer)idx;
+                for (int k = 0; k < channels; k++) {
+                    for (int i = 0; i < rows; i++) {
+                        for (int j = 0; j < cols; j++) {
+                            retidx.put(k, i, j, ushortidx.get(i, j, k));
+                        }
+                    }
+                }
+                done = true;
+            } else if (idx instanceof IntIndexer) {
+                IntIndexer intidx = (IntIndexer)idx;
+                for (int k = 0; k < channels; k++) {
+                    for (int i = 0; i < rows; i++) {
+                        for (int j = 0; j < cols; j++) {
+                            retidx.put(k, i, j, intidx.get(i, j, k));
+                        }
+                    }
+                }
+                done = true;
+            } else if (idx instanceof FloatIndexer) {
+                FloatIndexer floatidx = (FloatIndexer)idx;
+                for (int k = 0; k < channels; k++) {
+                    for (int i = 0; i < rows; i++) {
+                        for (int j = 0; j < cols; j++) {
+                            retidx.put(k, i, j, floatidx.get(i, j, k));
+                        }
+                    }
+                }
+                done = true;
+            }
+        } else if (pointer instanceof DoublePointer) {
+            DoubleIndexer retidx = DoubleIndexer.create((DoublePointer)pointer,
+                    new long[] {channels, rows, cols}, new long[] {stride[0], stride[1], stride[2]} );
+            if (idx instanceof UByteIndexer) {
+                UByteIndexer ubyteidx = (UByteIndexer)idx;
+                for (int k = 0; k < channels; k++) {
+                    for (int i = 0; i < rows; i++) {
+                        for (int j = 0; j < cols; j++) {
+                            retidx.put(k, i, j, ubyteidx.get(i, j, k));
+                        }
+                    }
+                }
+                done = true;
+            } else if (idx instanceof UShortIndexer) {
+                UShortIndexer ushortidx = (UShortIndexer)idx;
+                for (int k = 0; k < channels; k++) {
+                    for (int i = 0; i < rows; i++) {
+                        for (int j = 0; j < cols; j++) {
+                            retidx.put(k, i, j, ushortidx.get(i, j, k));
+                        }
+                    }
+                }
+                done = true;
+            } else if (idx instanceof IntIndexer) {
+                IntIndexer intidx = (IntIndexer)idx;
+                for (int k = 0; k < channels; k++) {
+                    for (int i = 0; i < rows; i++) {
+                        for (int j = 0; j < cols; j++) {
+                            retidx.put(k, i, j, intidx.get(i, j, k));
+                        }
+                    }
+                }
+                done = true;
+            } else if (idx instanceof FloatIndexer) {
+                FloatIndexer floatidx = (FloatIndexer)idx;
+                for (int k = 0; k < channels; k++) {
+                    for (int i = 0; i < rows; i++) {
+                        for (int j = 0; j < cols; j++) {
+                            retidx.put(k, i, j, floatidx.get(i, j, k));
+                        }
+                    }
+                }
+                done = true;
+            }
+        }
+        if (!done) {
+            for (int k = 0; k < channels; k++) {
+                for (int i = 0; i < rows; i++) {
+                    for (int j = 0; j < cols; j++) {
+                        if (channels > 1) {
+                            ret.putScalar(k, i, j, idx.getDouble(i, j, k));
+                        } else {
+                            ret.putScalar(i, j, idx.getDouble(i, j));
+                        }
+                    }
+                }
+            }
+        }
         image.data(); // dummy call to make sure it does not get deallocated prematurely
         if (normalizeIfNeeded) {
             ret = normalizeIfNeeded(ret);
         }
         return ret;
     }
-
-
 
     protected INDArray normalizeIfNeeded(INDArray image){
         return image.div(normalizeValue);
