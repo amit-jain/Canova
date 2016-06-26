@@ -234,7 +234,7 @@ public abstract class BaseImageRecordReader extends BaseRecordReader {
     public Collection<Writable> next() {
         if (iter != null) {
             Collection<Writable> ret = new ArrayList<>();
-            File image = (File) iter.next();
+            File image =  iter.next();
             currentFile = image;
 
             if (image.isDirectory())

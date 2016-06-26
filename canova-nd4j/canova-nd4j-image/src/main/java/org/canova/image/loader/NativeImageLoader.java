@@ -38,6 +38,7 @@ import org.canova.image.data.ImageWritable;
 import org.canova.image.transform.ImageTransform;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.factory.Nd4j;
+import org.nd4j.linalg.util.ArrayUtil;
 
 import static org.bytedeco.javacpp.lept.*;
 import static org.bytedeco.javacpp.opencv_core.*;
@@ -266,7 +267,7 @@ public class NativeImageLoader extends BaseImageLoader {
         int cols = image.cols();
         int channels = image.channels();
         Indexer idx = image.createIndexer();
-        INDArray ret = channels > 1 ? Nd4j.create(channels, rows, cols) : Nd4j.create(rows, cols);
+        INDArray ret = Nd4j.create(channels, rows, cols);
         Pointer pointer = ret.data().pointer();
         int[] stride = ret.stride();
         boolean done = false;
@@ -376,7 +377,7 @@ public class NativeImageLoader extends BaseImageLoader {
         if (normalizeIfNeeded) {
             ret = normalizeIfNeeded(ret);
         }
-        return ret;
+        return ret.reshape(ArrayUtil.combine(new int[]{1},ret.shape()));
     }
 
     protected INDArray normalizeIfNeeded(INDArray image){
