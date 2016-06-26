@@ -241,7 +241,7 @@ public abstract class BaseImageRecordReader extends BaseRecordReader {
                 return next();
             try {
                 invokeListeners(image);
-                INDArray row = imageLoader.asRowVector(image);
+                INDArray row = imageLoader.asMatrix(image);
                 ret = RecordConverter.toRecord(row);
                 if (appendLabel)
                     ret.add(new DoubleWritable(labels.indexOf(getLabel(image.getPath()))));
