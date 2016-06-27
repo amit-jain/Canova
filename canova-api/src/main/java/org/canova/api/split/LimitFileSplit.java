@@ -17,6 +17,7 @@ import java.util.*;
  *
  * Created by nyghtowl on 11/9/15.
  */
+@Deprecated
 public class LimitFileSplit extends FileSplit {
 
     protected static Logger log = LoggerFactory.getLogger(LimitFileSplit.class);

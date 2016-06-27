@@ -162,27 +162,27 @@ public class LFWLoader extends BaseImageLoader implements Serializable {
         return getRecordReader(numExamples, numExamples, new int[] {height, width, channels}, useSubset? SUB_NUM_LABELS: NUM_LABELS, LABEL_PATTERN, true, 1, new Random(System.currentTimeMillis()));
     }
 
-    public RecordReader getRecordReader(int numExamples, int batchSize, int numLabels,Random rng) {
+    public RecordReader getRecordReader(int batchSize, int numExamples, int numLabels,Random rng) {
         return getRecordReader(numExamples, batchSize, new int[] {height, width, channels}, numLabels, LABEL_PATTERN, true, 1, rng);
     }
 
-    public RecordReader getRecordReader(int numExamples, int batchSize, boolean train, double splitTrainTest) {
+    public RecordReader getRecordReader(int batchSize, int numExamples, boolean train, double splitTrainTest) {
         return getRecordReader(numExamples, batchSize, new int[] {height, width, channels}, useSubset? SUB_NUM_LABELS: NUM_LABELS, LABEL_PATTERN, train, splitTrainTest, new Random(System.currentTimeMillis()));
     }
 
-    public RecordReader getRecordReader(int numExamples, int batchSize, int[] imgDim, boolean train, double splitTrainTest, Random rng) {
+    public RecordReader getRecordReader(int batchSize, int numExamples, int[] imgDim, boolean train, double splitTrainTest, Random rng) {
         return getRecordReader(numExamples, batchSize, imgDim, useSubset? SUB_NUM_LABELS: NUM_LABELS, LABEL_PATTERN, train, splitTrainTest, rng);
     }
 
-    public RecordReader getRecordReader(int numExamples, int batchSize, PathLabelGenerator labelGenerator, boolean train, double splitTrainTest, Random rng) {
+    public RecordReader getRecordReader(int batchSize, int numExamples, PathLabelGenerator labelGenerator, boolean train, double splitTrainTest, Random rng) {
         return getRecordReader(numExamples, batchSize, new int[] {height, width, channels}, useSubset? SUB_NUM_LABELS: NUM_LABELS, labelGenerator, train, splitTrainTest, rng);
     }
 
-    public RecordReader getRecordReader(int numExamples, int batchSize, int[] imgDim, PathLabelGenerator labelGenerator, boolean train, double splitTrainTest, Random rng) {
+    public RecordReader getRecordReader(int batchSize, int numExamples, int[] imgDim, PathLabelGenerator labelGenerator, boolean train, double splitTrainTest, Random rng) {
         return getRecordReader(numExamples, batchSize, imgDim, useSubset? SUB_NUM_LABELS: NUM_LABELS, labelGenerator, train, splitTrainTest, rng);
     }
 
-    public RecordReader getRecordReader(int numExamples, int batchSize, int[]imgDim, int numLabels, PathLabelGenerator labelGenerator, boolean train, double splitTrainTest, Random rng) {
+    public RecordReader getRecordReader(int batchSize, int numExamples, int[]imgDim, int numLabels, PathLabelGenerator labelGenerator, boolean train, double splitTrainTest, Random rng) {
         load(numExamples, batchSize, numLabels, labelGenerator, splitTrainTest, rng);
         RecordReader recordReader = new ImageRecordReader(imgDim[0], imgDim[1], imgDim[2], labelGenerator, imageTransform, normalizeValue);
 

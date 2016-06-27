@@ -4,7 +4,9 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.canova.api.berkeley.Pair;
 import org.canova.api.io.data.DoubleWritable;
+import org.canova.api.io.data.IntWritable;
 import org.canova.api.io.data.Text;
+import org.canova.api.io.labels.PathLabelGenerator;
 import org.canova.api.split.FileSplit;
 import org.canova.api.split.InputSplit;
 import org.canova.api.writable.Writable;
@@ -12,6 +14,7 @@ import org.canova.common.RecordConverter;
 import org.canova.image.loader.BaseImageLoader;
 import org.canova.image.loader.ImageLoader;
 import org.canova.image.loader.NativeImageLoader;
+import org.canova.image.transform.ImageTransform;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,6 +29,7 @@ import java.util.*;
  * Built to avoid changing api at this time. Api should change to track labels that are only referenced by id in filename
  * Creates a hashmap for label name to id and references that with filename to generate matching lables.
  */
+@Deprecated
 public class ImageNetRecordReader extends BaseImageRecordReader {
 
     protected static Logger log = LoggerFactory.getLogger(ImageNetRecordReader.class);
@@ -34,37 +38,10 @@ public class ImageNetRecordReader extends BaseImageRecordReader {
     protected String fileNameMapPath = null; // use when the WNID is not in the filename (e.g. val labels)
     protected boolean eval = false; // use to load label ids for validation data set
 
-    public ImageNetRecordReader(int height, int width, int channels, String labelPath) {
-        this(height, width, channels,  labelPath, null, false, null, 0);
-    }
-
-    public ImageNetRecordReader(int height, int width, int channels, String labelPath, boolean appendLabel) {
-        this(height, width, channels, labelPath, null, appendLabel, null, 0);
-}
-
-    public ImageNetRecordReader(int height, int width, int channels, String labelPath, boolean appendLabel, String pattern) {
-        this(height, width, channels, labelPath, null, appendLabel, pattern, 0);
-    }
-
-    public ImageNetRecordReader(int height, int width, int channels, String labelPath, boolean appendLabel, String pattern, int patternPosition) {
-        this(height, width,  channels, labelPath, null, appendLabel, pattern, patternPosition);
-    }
-
-    public ImageNetRecordReader(int height, int width, int channels, String labelPath, String fileNameMapPath, boolean appendLabel) {
-        this(height, width, channels, labelPath, fileNameMapPath, appendLabel, null, 0);
-        this.eval = true;
-    }
-
-    public ImageNetRecordReader(int height, int width, int channels,  String labelPath, String fileNameMapPath, boolean appendLabel, String pattern, int patternPosition) {
-        this.height = height;
-        this.width = width;
-        this.channels = channels;
-        this.cropImage = true;
-        this.labelPath = labelPath;
-        this.appendLabel = appendLabel;
-        this.fileNameMapPath = fileNameMapPath;
-        this.pattern = pattern;
-        this.patternPosition = patternPosition;
+    public ImageNetRecordReader(int[] imgDim, PathLabelGenerator labelGenerator, ImageTransform imgTransform, double normalizeValue) {
+        this.height = imgDim[0];
+        this.width = imgDim[1];
+        this.channels = imgDim[2];
         this.eval = true;
     }
 
@@ -180,7 +157,7 @@ public class ImageNetRecordReader extends BaseImageRecordReader {
             labelId = labels.indexOf(labelFileIdMap.get(fileNameMap.get(fileName)));
         }
         if (labelId >= 0)
-            ret.add(new DoubleWritable(labelId));
+            ret.add(new IntWritable(labelId));
         else
             throw new IllegalStateException("Illegal label " + labelId);
         return ret;
