@@ -25,6 +25,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+
+import org.canova.api.io.labels.ParentPathLabelGenerator;
 import org.canova.api.io.labels.PathLabelGenerator;
 import org.canova.api.writable.Writable;
 
@@ -81,7 +83,7 @@ public class BalancedPathFilter extends RandomPathFilter {
      * @param labels           of the paths to keep (empty set == keep all paths)
      */
     public BalancedPathFilter(Random random, String[] extensions, PathLabelGenerator labelGenerator,
-            int maxPaths, int maxLabels, int minPathsPerLabel, int maxPathsPerLabel, String... labels) {
+                              int maxPaths, int maxLabels, int minPathsPerLabel, int maxPathsPerLabel, String... labels) {
         super(random, extensions, maxPaths);
         this.labelGenerator = labelGenerator;
         this.maxLabels = maxLabels;
@@ -105,8 +107,9 @@ public class BalancedPathFilter extends RandomPathFilter {
     @Override
     public URI[] filter(URI[] paths) {
         paths = super.filter(paths);
-
-        Map<Writable, List<URI>> labelPaths  = new LinkedHashMap<Writable, List<URI>>();
+        if(labelGenerator == null)
+            labelGenerator = new ParentPathLabelGenerator();
+        Map<Writable, List<URI>> labelPaths  = new LinkedHashMap<>();
         for (int i = 0; i < paths.length; i++) {
             URI path = paths[i];
             Writable label = labelGenerator.getLabelForPath(path);
