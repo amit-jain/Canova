@@ -88,6 +88,7 @@ public class LineRecordReader extends BaseRecordReader {
                 try {
                     close();
                     iter = IOUtils.lineIterator(new InputStreamReader(locations[currIndex].toURL().openStream()));
+                    onLocationOpen(locations[currIndex]);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -114,6 +115,7 @@ public class LineRecordReader extends BaseRecordReader {
                 try {
                     close();
                     iter = IOUtils.lineIterator(new InputStreamReader(locations[currIndex].toURL().openStream()));
+                    onLocationOpen(locations[currIndex]);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -123,6 +125,10 @@ public class LineRecordReader extends BaseRecordReader {
 
             return false;
         }
+    }
+
+    protected void onLocationOpen(URI location) {
+
     }
 
     @Override
