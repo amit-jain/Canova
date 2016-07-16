@@ -107,4 +107,10 @@ public class CSVRecordReader extends LineRecordReader {
         super.reset();
         skippedLines = false;
     }
+
+    @Override
+    protected void onLocationOpen(URI location) {
+        skippedLines = false;
+        skipNumLines = 0;
+    }
 }
