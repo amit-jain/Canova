@@ -1,10 +1,12 @@
 package org.canova.api.records.reader.impl;
 
+import com.sun.corba.se.spi.ior.Writeable;
 import org.apache.commons.io.FileUtils;
 import org.canova.api.io.data.IntWritable;
 import org.canova.api.io.data.Text;
 import org.canova.api.records.writer.impl.CSVRecordWriter;
 import org.canova.api.records.writer.impl.FileRecordWriter;
+import org.canova.api.split.CollectionInputSplit;
 import org.canova.api.split.FileSplit;
 import org.canova.api.split.StringSplit;
 import org.canova.api.util.ClassPathResource;
@@ -12,9 +14,11 @@ import org.canova.api.writable.Writable;
 import org.junit.Test;
 
 import java.io.File;
+import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
@@ -120,6 +124,31 @@ public class CSVRecordReaderTest {
         System.out.println(fileContents);
 
         assertEquals(expected,fileContents);
+    }
+
+    @Test
+    public void testSplit() throws Exception {
+        URI[] arr = new URI[3];
+        try {
+            arr[0] = new ClassPathResource("csvsequence_0.txt").getFile().toURI();
+            arr[1] = new ClassPathResource("csvsequence_1.txt").getFile().toURI();
+            arr[2] = new ClassPathResource("csvsequence_2.txt").getFile().toURI();
+        } catch(Exception e ){
+            throw new RuntimeException(e);
+        }
+
+        CSVRecordReader rr = new CSVRecordReader(1);
+        rr.initialize(new CollectionInputSplit(Arrays.asList(arr)));
+
+        // make sure that there is no header in the lines returned by the reader
+        while (rr.hasNext()) {
+            Collection<Writable> line = rr.next();
+            assertEquals("header is not omitted", 3, line.size());
+
+            for (Writable w : line) {
+                w.toInt();
+            }
+        }
     }
 
     @Test
