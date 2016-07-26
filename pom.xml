@@ -77,21 +77,35 @@
         <commons-io.version>2.4</commons-io.version>
         <args4j.version>2.0.29</args4j.version>
         <camel.version>2.16.3</camel.version>
+        <scala.binary.version>2.10</scala.binary.version>
+        <scala.version>2.10.4</scala.version>
     </properties>
 
     <profiles>
-            <profile>
-                <id>scala-2.11</id>
-                <activation>
-                    <property>
-                        <name>scala-2.11</name>
-                    </property>
-                </activation>
-                <properties>
-                    <scala.version>2.11.7</scala.version>
-                    <scala.binary.version>2.11</scala.binary.version>
-                </properties>
-            </profile>
+        <profile>
+            <id>scala-2.11</id>
+            <activation>
+                <property>
+                    <name>scala-2.11</name>
+                </property>
+            </activation>
+            <properties>
+                <scala.version>2.11.7</scala.version>
+                <scala.binary.version>2.11</scala.binary.version>
+            </properties>
+        </profile>
+        <profile>
+            <id>scala-2.10</id>
+            <activation>
+                <property>
+                    <name>scala-2.10</name>
+                </property>
+            </activation>
+            <properties>
+                <scala.binary.version>2.10</scala.binary.version>
+                <scala.version>2.10.4</scala.version>
+            </properties>
+        </profile>
 
 
         <profile>
@@ -303,6 +317,36 @@
 
         </pluginManagement>
         <plugins>
+            <plugin>
+                <groupId>net.alchim31.maven</groupId>
+                <artifactId>scala-maven-plugin</artifactId>
+                <version>3.2.2</version>
+                <configuration>
+                    <scalaVersion>${scala.version}</scalaVersion>
+                    <args>
+                        <arg>-deprecation</arg>
+                        <arg>-explaintypes</arg>
+                    </args>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>scala-compile-first</id>
+                        <phase>process-resources</phase>
+                        <goals>
+                            <goal>add-source</goal>
+                            <goal>compile</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>scala-test-compile</id>
+                        <phase>process-test-resources</phase>
+                        <goals>
+                            <goal>add-source</goal>
+                            <goal>testCompile</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
             <plugin>
                 <artifactId>maven-deploy-plugin</artifactId>
                 <configuration>
